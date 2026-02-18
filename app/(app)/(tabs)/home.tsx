@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { getPrakritiResultAsync } from '@/app/services/prakritiService';
 import { getHighPrioritySuggestions } from '@/app/services/dietarySuggestionService';
@@ -11,23 +12,43 @@ import { apiClient } from '@/app/services/apiClient';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FEFAF5',
+    backgroundColor: '#FFF7EC',
   },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
+    paddingBottom: 32,
+  },
+  heroSection: {
     paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingTop: 20,
+    paddingBottom: 32,
+    backgroundColor: '#FFF7EC',
+  },
+  greetingContainer: {
+    marginBottom: 24,
+  },
+  greetingSubtitle: {
+    fontSize: 15,
+    color: '#6B7280',
+    marginBottom: 6,
+    fontWeight: '500',
   },
   greetingTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#2E2A24',
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
   greetingDate: {
-    color: '#6B7280',
+    fontSize: 14,
+    color: '#6B5E4B',
+    fontWeight: '500',
+  },
+  sectionContainer: {
+    paddingHorizontal: 24,
     marginBottom: 24,
   },
   doshaCardsContainer: {
@@ -61,8 +82,15 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+  },
+  statItemContainer: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: '#E5E7EB',
   },
   doshaCardsRow: {
     flexDirection: 'row',
@@ -76,61 +104,234 @@ const styles = StyleSheet.create({
   },
   quickButton: {
     flex: 1,
-    backgroundColor: '#FFF1E1',
-    borderWidth: 1,
-    borderColor: '#F0D8C0',
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    backgroundColor: '#FFF0DE',
+    borderRadius: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    shadowColor: '#E58B3A',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#F2D2B5',
   },
   quickButtonAlt: {
-    backgroundColor: '#F0FAF2',
-    borderColor: '#CFE9D6',
+    shadowColor: '#10B981',
+    borderColor: '#D8F2DE',
+    backgroundColor: '#E6F6EA',
+  },
+  quickButtonIcon: {
+    fontSize: 28,
+    marginBottom: 8,
   },
   quickButtonText: {
-    fontSize: 15,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#2E2A24',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  quickButtonSubtext: {
+    fontSize: 11,
+    color: '#6B5E4B',
+    marginTop: 2,
+  },
+  prakritiHeroCard: {
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  prakritiCardGradient: {
+    padding: 24,
+    borderRadius: 24,
+  },
+  prakritiCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  prakritiEmojiLarge: {
+    fontSize: 56,
+    marginRight: 16,
+  },
+  prakritiInfo: {
+    flex: 1,
+  },
+  prakritiLabel: {
+    fontSize: 13,
+    color: '#FFFFFF',
+    opacity: 0.9,
     fontWeight: '600',
-    color: '#2F2A23',
+    marginBottom: 4,
+  },
+  prakritiType: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  prakritiPercentage: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    opacity: 0.95,
+    fontWeight: '600',
+  },
+  prakritiSecondaryInfo: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  prakritiSecondaryText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  statsCard: {
+    backgroundColor: '#FFF0DE',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#E58B3A',
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F2D2B5',
+  },
+  statsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#2E2A24',
+    marginBottom: 16,
   },
   tipsContainer: {
     gap: 12,
     marginBottom: 32,
   },
-  tipCard: {
-    marginBottom: 12,
+  infoCard: {
+    backgroundColor: '#FFF0DE',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#E58B3A',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+    borderLeftWidth: 4,
   },
-  tipContent: {
+  infoCardBlue: {
+    borderLeftColor: '#E58B3A',
+  },
+  infoCardGreen: {
+    borderLeftColor: '#4A9B6B',
+  },
+  infoCardContent: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
   },
-  tipEmoji: {
-    fontSize: 24,
-    marginRight: 12,
+  infoCardEmoji: {
+    fontSize: 28,
+    marginRight: 14,
   },
-  tipTitle: {
-    fontWeight: '600',
-    color: '#111827',
+  infoCardTextContainer: {
+    flex: 1,
   },
-  tipDescription: {
+  infoCardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2E2A24',
+    marginBottom: 6,
+  },
+  infoCardDescription: {
     fontSize: 14,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-  learnMoreLink: {
-    color: '#EE9B4D',
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#5F5344',
+    lineHeight: 20,
   },
   buttonsGap: {
     gap: 12,
+  },
+  actionButton: {
+    backgroundColor: '#FFF0DE',
+    borderRadius: 16,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#E58B3A',
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#F2D2B5',
+  },
+  actionButtonSecondary: {
+    borderColor: '#D8F2DE',
+    shadowColor: '#4A9B6B',
+    backgroundColor: '#E6F6EA',
+  },
+  actionButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  actionButtonEmoji: {
+    fontSize: 24,
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2E2A24',
+  },
+  actionButtonArrow: {
+    fontSize: 18,
+    color: '#8A7B6A',
+  },
+  tipCard: {
+    backgroundColor: 'linear-gradient(135deg, #667EEA 0%, #764BA2 100%)',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#667EEA',
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+  },
+  tipCardContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  tipEmoji: {
+    fontSize: 32,
+    marginRight: 16,
+  },
+  tipTextContainer: {
+    flex: 1,
+  },
+  tipTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6,
+  },
+  tipDescription: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    lineHeight: 20,
   },
   modalBackdrop: {
     flex: 1,
@@ -290,64 +491,101 @@ export default function HomeScreen() {
     );
   }
 
+  const getTimeOfDayGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
+  const getDoshaColor = (dosha: string): string => {
+    switch (dosha) {
+      case 'vata':
+        return '#667E';
+      case 'pitta':
+        return '#F71C';
+      case 'kapha':
+        return '#4FCFE';
+      default:
+        return '#EE9B4D';
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.contentContainer}>
-          {/* Greeting */}
-          <Text style={styles.greetingTitle}>Welcome Back</Text>
-          <Text style={styles.greetingDate}>
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-          </Text>
+          {/* Hero Section with Greeting */}
+          <View style={styles.heroSection}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greetingSubtitle}>{getTimeOfDayGreeting()}</Text>
+              <Text style={styles.greetingTitle}>
+                {user?.username ? user.username : 'Welcome Back'}
+              </Text>
+              <Text style={styles.greetingDate}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </Text>
+            </View>
+          </View>
 
-          {/* Prakriti Card */}
+          {/* Prakriti Hero Card */}
           {prakriti && (
-            <Section title="Your Prakriti">
+            <View style={styles.sectionContainer}>
               <TouchableOpacity 
                 onPress={() => router.navigate('/(app)/(tabs)/profile')}
-                activeOpacity={0.7}
+                activeOpacity={0.9}
               >
-                <Card style={{ backgroundColor: '#F3F4F6', marginBottom: 24 }}>
-                  <View style={styles.doshaCardsContainer}>
-                    <View>
-                      <Text style={styles.doshaEmoji}>
-                        {prakriti.primaryDosha === 'vata' && '💨'} 
+                <View style={[styles.prakritiHeroCard, { backgroundColor: getDoshaColor(prakriti.primaryDosha) }]}>
+                  <View style={styles.prakritiCardGradient}>
+                    <View style={styles.prakritiCardHeader}>
+                      <Text style={styles.prakritiEmojiLarge}>
+                        {prakriti.primaryDosha === 'vata' && '💨'}
                         {prakriti.primaryDosha === 'pitta' && '🔥'}
                         {prakriti.primaryDosha === 'kapha' && '💧'}
                       </Text>
+                      <View style={styles.prakritiInfo}>
+                        <Text style={styles.prakritiLabel}>YOUR PRAKRITI TYPE</Text>
+                        <Text style={styles.prakritiType}>
+                          {prakriti.primaryDosha.charAt(0).toUpperCase() + prakriti.primaryDosha.slice(1)}
+                        </Text>
+                        <Text style={styles.prakritiPercentage}>
+                          {prakriti.scores[prakriti.primaryDosha]}% Dominant
+                        </Text>
+                      </View>
                     </View>
-                    <View style={styles.doshaCardContent}>
-                      <Text style={styles.doshaName}>
-                        {prakriti.primaryDosha.charAt(0).toUpperCase() + prakriti.primaryDosha.slice(1)}
-                      </Text>
-                      <Text style={styles.doshaScore}>
-                        {prakriti.scores[prakriti.primaryDosha]}% Dominant
-                      </Text>
-                      <Text style={styles.doshaSecondary}>
-                        Secondary: {prakriti.secondaryDosha}
+                    <View style={styles.prakritiSecondaryInfo}>
+                      <Text style={styles.prakritiSecondaryText}>
+                        Secondary: {prakriti.secondaryDosha.charAt(0).toUpperCase() + prakriti.secondaryDosha.slice(1)} • Tap to view details
                       </Text>
                     </View>
                   </View>
-                </Card>
+                </View>
               </TouchableOpacity>
-            </Section>
+            </View>
           )}
 
-          <View style={styles.quickButtonsRow}>
-            <TouchableOpacity
-              style={styles.quickButton}
-              activeOpacity={0.8}
-              onPress={() => setIsPrakritiFormOpen(true)}
-            >
-              <Text style={styles.quickButtonText}>Prakriti</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.quickButton, styles.quickButtonAlt]}
-              activeOpacity={0.8}
-              onPress={() => setIsDoshaFormOpen(true)}
-            >
-              <Text style={styles.quickButtonText}>Dosha</Text>
-            </TouchableOpacity>
+          <View style={styles.sectionContainer}>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827', marginBottom: 16 }}>Assessments</Text>
+            <View style={styles.quickButtonsRow}>
+              <TouchableOpacity
+                style={styles.quickButton}
+                activeOpacity={0.85}
+                onPress={() => setIsPrakritiFormOpen(true)}
+              >
+                <Text style={styles.quickButtonIcon}>🧬</Text>
+                <Text style={styles.quickButtonText}>Prakriti</Text>
+                <Text style={styles.quickButtonSubtext}>Body Constitution</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.quickButton, styles.quickButtonAlt]}
+                activeOpacity={0.85}
+                onPress={() => setIsDoshaFormOpen(true)}
+              >
+                <Text style={styles.quickButtonIcon}>🌸</Text>
+                <Text style={styles.quickButtonText}>Dosha</Text>
+                <Text style={styles.quickButtonSubtext}>Current Balance</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <Modal
@@ -658,19 +896,29 @@ export default function HomeScreen() {
               </View>
             </View>
           </Modal>
-          <Section title="Today's Stats">
-            <Card>
+          {/* Today's Stats */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.statsTitle}>Today's Stats</Text>
+            <View style={styles.statsCard}>
               <View style={styles.statsRow}>
                 <StatItem label="Calories" value="2,100" unit="kcal" />
+                <View style={styles.statDivider} />
                 <StatItem label="Protein" value="75" unit="g" />
+                <View style={styles.statDivider} />
                 <StatItem label="Meals" value="3" color="text-secondary-500" />
               </View>
-            </Card>
-          </Section>
+            </View>
+          </View>
 
           {/* Dosha Balance */}
           {prakriti && (
-            <Section title="Current Dosha Balance">
+            <View style={styles.sectionContainer}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827' }}>Dosha Balance</Text>
+                <TouchableOpacity onPress={() => router.navigate('/(app)/(tabs)/analytics')}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#EE9B4D' }}>View Details →</Text>
+                </TouchableOpacity>
+              </View>
               <View style={styles.doshaCardsRow}>
                 <DoshaCard
                   dosha="vata"
@@ -683,7 +931,6 @@ export default function HomeScreen() {
                   score={prakriti.scores.pitta}
                   title="Pitta"
                   description="Fire & Water"
-                  onPress={() => router.navigate('/(app)/(tabs)/analytics')}
                 />
                 <DoshaCard
                   dosha="kapha"
@@ -692,70 +939,85 @@ export default function HomeScreen() {
                   description="Water & Earth"
                 />
               </View>
-            </Section>
+            </View>
           )}
 
           {/* Quick Actions */}
-          <Section title="Quick Actions">
+          <View style={styles.sectionContainer}>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827', marginBottom: 16 }}>Quick Actions</Text>
             <View style={styles.buttonsGap}>
-              <Button
-                title="📸 Recognize Food"
+              <TouchableOpacity
+                style={styles.actionButton}
+                activeOpacity={0.85}
                 onPress={() => router.navigate('/(app)/(tabs)/food-tracking')}
-              />
-              <Button
-                title="📋 View Today's Plan"
-                variant="secondary"
-                onPress={() => router.navigate('/(app)/(tabs)/plans')}
-              />
-            </View>
-          </Section>
-
-          {/* Today's Suggestions */}
-          {suggestions.length > 0 && (
-            <Section title="Today's Tip">
-              <Card style={{ borderLeftWidth: 4, borderLeftColor: '#EE9B4D' }}>
-                <View>
-                  <View style={styles.tipContent}>
-                    <Text style={styles.tipEmoji}>💡</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.tipTitle}>{suggestions[0].title}</Text>
-                      <Text style={styles.tipDescription}>{suggestions[0].description}</Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => router.navigate('/(app)/(tabs)/analytics')}
-                  >
-                    <Text style={styles.learnMoreLink}>Learn More →</Text>
-                  </TouchableOpacity>
+              >
+                <View style={styles.actionButtonContent}>
+                  <Text style={styles.actionButtonEmoji}>📸</Text>
+                  <Text style={styles.actionButtonText}>Recognize Food</Text>
                 </View>
-              </Card>
-            </Section>
+                <Text style={styles.actionButtonArrow}>→</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.actionButtonSecondary]}
+                activeOpacity={0.85}
+                onPress={() => router.navigate('/(app)/(tabs)/plans')}
+              >
+                <View style={styles.actionButtonContent}>
+                  <Text style={styles.actionButtonEmoji}>📋</Text>
+                  <Text style={styles.actionButtonText}>View Today's Plan</Text>
+                </View>
+                <Text style={styles.actionButtonArrow}>→</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Today's Tip */}
+          {suggestions.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827', marginBottom: 16 }}>Today's Tip</Text>
+              <LinearGradient
+                colors={['#667EEA', '#764BA2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.tipCard}
+              >
+                <View style={styles.tipCardContent}>
+                  <Text style={styles.tipEmoji}>🌿</Text>
+                  <View style={styles.tipTextContainer}>
+                    <Text style={styles.tipTitle}>{suggestions[0].title}</Text>
+                    <Text style={styles.tipDescription}>{suggestions[0].description}</Text>
+                  </View>
+                </View>
+              </LinearGradient>
+            </View>
           )}
 
           {/* Info Cards */}
-          <View style={styles.tipsContainer}>
-            <Card style={{ backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE' }}>
-              <View style={{ flexDirection: 'row' }}>
-                <Text style={styles.tipEmoji}>🌿</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.tipTitle, { color: '#1E3A8A' }]}>Tip</Text>
-                  <Text style={[styles.tipDescription, { color: '#1E40AF' }]}>
-                    Eat mindfully and chew thoroughly for better digestion
-                  </Text>
+          <View style={styles.sectionContainer}>
+            <View style={styles.tipsContainer}>
+              <View style={[styles.infoCard, styles.infoCardBlue]}>
+                <View style={styles.infoCardContent}>
+                  <Text style={styles.infoCardEmoji}>🌿</Text>
+                  <View style={styles.infoCardTextContainer}>
+                    <Text style={styles.infoCardTitle}>Mindful Eating</Text>
+                    <Text style={styles.infoCardDescription}>
+                      Chew thoroughly and eat slowly for better digestion and nutrient absorption
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </Card>
-            <Card style={{ backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#DCFCE7' }}>
-              <View style={{ flexDirection: 'row' }}>
-                <Text style={styles.tipEmoji}>💧</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.tipTitle, { color: '#166534' }]}>Hydration</Text>
-                  <Text style={[styles.tipDescription, { color: '#15803D' }]}>
-                    Drink warm water throughout the day for optimal digestion
-                  </Text>
+              <View style={[styles.infoCard, styles.infoCardGreen]}>
+                <View style={styles.infoCardContent}>
+                  <Text style={styles.infoCardEmoji}>💧</Text>
+                  <View style={styles.infoCardTextContainer}>
+                    <Text style={styles.infoCardTitle}>Stay Hydrated</Text>
+                    <Text style={styles.infoCardDescription}>
+                      Drink warm water throughout the day to support digestion and balance doshas
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </Card>
+            </View>
           </View>
         </View>
       </ScrollView>
