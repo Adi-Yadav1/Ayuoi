@@ -82,7 +82,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = useCallback(async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      
+      // Validate inputs
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+      
       const response = await apiClient.login(email, password);
+      
+      // Check if response has user and token
+      if (!response?.token || !response?.user) {
+        throw new Error('Invalid response from server. Please try again.');
+      }
       
       // Store token and user
       await AsyncStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
@@ -96,7 +107,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
     } catch (error) {
       console.error('Sign in failed', error);
-      throw error;
+      // Re-throw with proper error message
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Login failed. Please check your email and password and try again.');
     } finally {
       setIsLoading(false);
     }

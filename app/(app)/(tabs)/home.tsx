@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet, Modal, TextInput } from 'react-native';
+import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { getPrakritiResultAsync } from '@/app/services/prakritiService';
 import { getHighPrioritySuggestions } from '@/app/services/dietarySuggestionService';
 import { Card, Section, Button, Loader, DoshaCard, StatItem } from '@/components/ui/Button';
 import { PrakritiResult, DietarySuggestion } from '@/app/types';
+import { useAuth } from '@/app/context/AuthContext';
+import { apiClient } from '@/app/services/apiClient';
 
 const styles = StyleSheet.create({
   container: {
@@ -182,6 +184,9 @@ export default function HomeScreen() {
   const [suggestions, setSuggestions] = useState<DietarySuggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPrakritiFormOpen, setIsPrakritiFormOpen] = useState(false);
+  const [isPrakritiSubmitting, setIsPrakritiSubmitting] = useState(false);
+  const [isDoshaSubmitting, setIsDoshaSubmitting] = useState(false);
+  const { user } = useAuth();
   const [prakritiForm, setPrakritiForm] = useState({
     body_size: '',
     body_weight_tendency: '',
@@ -416,10 +421,83 @@ export default function HomeScreen() {
                   ))}
 
                   <Button
-                    title="Save Prakriti"
-                    onPress={() => {
-                      console.log('Prakriti form data', prakritiForm);
-                      setIsPrakritiFormOpen(false);
+                    title={isPrakritiSubmitting ? 'Saving...' : 'Save Prakriti'}
+                    onPress={async () => {
+                      if (!user) {
+                        Alert.alert('Error', 'User not found. Please login again.');
+                        return;
+                      }
+
+                      try {
+                        setIsPrakritiSubmitting(true);
+                        const response = await apiClient.submitPrakritiTraits(prakritiForm);
+                        console.log('Prakriti submission response:', response);
+                        
+                        // Check if any field is empty
+                        const emptyFields = Object.entries(prakritiForm).filter(([_, value]) => value === '');
+                        if (emptyFields.length > 0) {
+                          Alert.alert(
+                            'Incomplete Form',
+                            `Please fill all ${emptyFields.length} field(s) before submitting.`
+                          );
+                          return;
+                        }
+
+                        Alert.alert('Success', 'Prakriti assessment submitted successfully!', [
+                          {
+                            text: 'OK',
+                            onPress: () => {
+                              setIsPrakritiFormOpen(false);
+                              // Reset form
+                              setPrakritiForm({
+                                body_size: '',
+                                body_weight_tendency: '',
+                                height: '',
+                                bone_structure: '',
+                                body_frame: '',
+                                complexion: '',
+                                skin_type: '',
+                                skin_texture: '',
+                                hair_color: '',
+                                hair_density: '',
+                                hair_texture: '',
+                                hair_appearance: '',
+                                hair_graying: '',
+                                face_shape: '',
+                                cheeks: '',
+                                jaw_structure: '',
+                                eyes: '',
+                                eye_luster: '',
+                                eyelashes: '',
+                                blinking_pattern: '',
+                                nose_shape: '',
+                                nose_tip: '',
+                                teeth_structure: '',
+                                teeth_gums: '',
+                                lips: '',
+                                nails: '',
+                                appetite: '',
+                                digestion_speed: '',
+                                hunger_frequency: '',
+                                thirst_level: '',
+                                sweating: '',
+                                bowel_habit: '',
+                                taste_preference: '',
+                                food_temperature_preference: '',
+                                weather_preference: '',
+                              });
+                            },
+                          },
+                        ]);
+                      } catch (error) {
+                        console.error('Prakriti submission error:', error);
+                        Alert.alert(
+                          'Error',
+                          error instanceof Error ? error.message : 'Failed to submit Prakriti assessment. Please try again.'
+                        );
+                      } finally {
+                        setIsPrakritiSubmitting(false);
+                      }
                     }}
                     style={{ marginTop: 12, marginBottom: 12 }}
                   />
@@ -497,10 +575,82 @@ export default function HomeScreen() {
                   ))}
 
                   <Button
-                    title="Analyze Dosha"
-                    onPress={() => {
-                      console.log('Dosha assessment data', doshaForm);
-                      setIsDoshaFormOpen(false);
+                    title={isDoshaSubmitting ? 'Submitting...' : 'Analyze Dosha'}
+                    onPress={async () => {
+                      if (!user) {
+                        Alert.alert('Error', 'User not found. Please login again.');
+                        return;
+                      }
+
+                      try {
+                        setIsDoshaSubmitting(true);
+                        
+                        // Check if any field is empty
+                        const emptyFields = Object.entries(doshaForm).filter(([_, value]) => value === '');
+                        if (emptyFields.length > 0) {
+                          Alert.alert(
+                            'Incomplete Form',
+                            `Please fill all ${emptyFields.length} field(s) before submitting.`
+                          );
+                          return;
+                        }
+
+                        const response = await apiClient.submitDoshaTraits(doshaForm);
+                        console.log('Dosha submission response:', response);
+                        
+                        Alert.alert('Success', 'Dosha assessment submitted successfully!', [
+                          {
+                            text: 'OK',
+                            onPress: () => {
+                              setIsDoshaFormOpen(false);
+                              // Reset form
+                              setDoshaForm({
+                                current_symptoms: '',
+                                symptom_duration: '',
+                                symptom_severity: '',
+                                medical_history: '',
+                                current_medications: '',
+                                appetite_level: '',
+                                digestion_quality: '',
+                                bowel_pattern: '',
+                                gas_bloating: '',
+                                acidity_burning: '',
+                                sleep_quality: '',
+                                sleep_duration: '',
+                                daytime_energy: '',
+                                mental_state: '',
+                                stress_level: '',
+                                physical_activity_level: '',
+                                daily_routine_consistency: '',
+                                work_type: '',
+                                travel_frequency: '',
+                                diet_type: '',
+                                food_quality: '',
+                                taste_dominance: '',
+                                meal_timing_regular: '',
+                                hydration_level: '',
+                                caffeine_intake: '',
+                                climate_exposure: '',
+                                season: '',
+                                pollution_exposure: '',
+                                screen_exposure: '',
+                                age_group: '',
+                                gender: '',
+                                occupation: '',
+                                cultural_diet_preference: '',
+                              });
+                            },
+                          },
+                        ]);
+                      } catch (error) {
+                        console.error('Dosha submission error:', error);
+                        Alert.alert(
+                          'Error',
+                          error instanceof Error ? error.message : 'Failed to submit Dosha assessment. Please try again.'
+                        );
+                      } finally {
+                        setIsDoshaSubmitting(false);
+                      }
                     }}
                     style={{ marginTop: 12, marginBottom: 12 }}
                   />

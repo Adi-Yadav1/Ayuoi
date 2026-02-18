@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, SafeAreaView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { TextInputField } from '@/components/Forms';
 import { Button } from '@/components/ui/Button';
-import { styles as themeStyles } from '@/app/styles/theme';
 import { useAuth } from '@/app/context/AuthContext';
 
 const styles = StyleSheet.create({
@@ -63,23 +62,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
   },
-  demoSection: {
-    marginTop: 24,
-    paddingTop: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  demoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  demoSubtitle: {
-    color: '#6B7280',
-    fontSize: 14,
-    marginBottom: 16,
-  },
   innerContent: {
     paddingHorizontal: 24,
     paddingVertical: 32,
@@ -95,7 +77,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      alert('Please fill in all fields');
+      setError('Please fill in all fields');
       return;
     }
 
@@ -105,7 +87,7 @@ export default function LoginScreen() {
       await signIn(email.trim(), password);
       router.replace('/(app)/(tabs)/home');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed. Try again.';
+      const message = err instanceof Error ? err.message : 'Login failed. Please check your email and password.';
       setError(message);
     } finally {
       setLoading(false);
@@ -160,24 +142,6 @@ export default function LoginScreen() {
                 <Text style={[styles.signupText, styles.signupHighlight]}>Sign Up</Text>
               </TouchableOpacity>
             </View>
-          </View>
-
-          {/* Demo Login */}
-          <View style={styles.demoSection}>
-            <Text style={styles.demoTitle}>Demo Login</Text>
-            <Text style={styles.demoSubtitle}>
-              Use any email and password to continue
-            </Text>
-            <TouchableOpacity
-              style={[themeStyles.button, { backgroundColor: '#0EA5E9' }]}
-              onPress={() => handleLogin()}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={themeStyles.buttonText}>Continue with Demo</Text>
-              )}
-            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

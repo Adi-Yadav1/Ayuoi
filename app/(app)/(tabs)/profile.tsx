@@ -5,6 +5,7 @@ import { getPrakritiResultAsync } from '@/app/services/prakritiService';
 import { getHealthProfile } from '@/app/services/analyticsService';
 import { Card, Section, Button, Loader } from '@/components/ui/Button';
 import { PrakritiResult, HealthProfile } from '@/app/types';
+import { useAuth } from '@/app/context/AuthContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -170,6 +171,7 @@ const styles = StyleSheet.create({
 });
 
 export default function ProfileScreen() {
+  const { user } = useAuth();
   const [prakriti, setPrakriti] = useState<PrakritiResult | null>(null);
   const [health, setHealth] = useState<HealthProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -222,15 +224,23 @@ export default function ProfileScreen() {
               <View>
                 <View style={styles.healthRow}>
                   <Text style={styles.healthLabel}>Name</Text>
-                  <Text style={styles.healthValue}>John Doe</Text>
+                  <Text style={styles.healthValue}>{user?.username || 'User'}</Text>
                 </View>
                 <View style={styles.healthRow}>
                   <Text style={styles.healthLabel}>Email</Text>
-                  <Text style={[styles.healthValue, { fontSize: 12 }]}>john@example.com</Text>
+                  <Text style={[styles.healthValue, { fontSize: 12 }]}>{user?.email || 'Not available'}</Text>
                 </View>
                 <View style={[styles.healthRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
                   <Text style={styles.healthLabel}>Member Since</Text>
-                  <Text style={styles.healthValue}>Jan 2024</Text>
+                  <Text style={styles.healthValue}>
+                    {user?.createdAt 
+                      ? new Date(user.createdAt).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          year: 'numeric' 
+                        })
+                      : 'Jan 2024'
+                    }
+                  </Text>
                 </View>
               </View>
             </Card>

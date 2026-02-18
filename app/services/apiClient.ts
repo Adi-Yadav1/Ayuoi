@@ -51,7 +51,21 @@ class APIClient {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        let errorMessage = `API Error: ${response.statusText}`;
+        
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // If we can't parse error response, use status text
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       return await response.json();
@@ -71,7 +85,11 @@ class APIClient {
       username,
       password,
     });
-    return response as AuthResponse;
+    
+    // Backend wraps response in data property, extract it
+    const authData = response.data || response;
+    
+    return authData as AuthResponse;
   }
 
   async login(email: string, password: string) {
@@ -79,7 +97,14 @@ class APIClient {
       email,
       password,
     });
-    return response as AuthResponse;
+    
+    // Log response for debugging
+    console.log('Login response:', response);
+    
+    // Backend wraps response in data property, extract it
+    const authData = response.data || response;
+    
+    return authData as AuthResponse;
   }
 
   async getCurrentUser() {
@@ -142,6 +167,16 @@ class APIClient {
   async getDoshaProfile(userId: string) {
     const response = await this.makeRequest('GET', `/users/${userId}/dosha-profile`);
     return response as DoshaProfile;
+  }
+
+  async submitPrakritiTraits(traits: Record<string, string>) {
+    const response = await this.makeRequest('POST', '/profile/prakriti-traits', traits);
+    return response;
+  }
+
+  async submitDoshaTraits(traits: Record<string, string>) {
+    const response = await this.makeRequest('POST', '/profile/dosha-traits', traits);
+    return response;
   }
 
   // ──────────────────────────────────────────────
