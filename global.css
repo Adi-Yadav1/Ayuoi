@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-bg-light text-gray-900;
+  }
+  
+  h1 {
+    @apply text-3xl font-bold;
+  }
+  
+  h2 {
+    @apply text-2xl font-bold;
+  }
+}
+
+@layer components {
+  .safe-area {
+    @apply pt-safe pr-safe pb-safe pl-safe;
+  }
+  
+  .container {
+    @apply px-4 py-6;
+  }
+  
+  .section-header {
+    @apply text-xl font-bold text-gray-900 mb-4;
+  }
+  
+  .card-shadow {
+    @apply shadow-md;
+  }
+}
