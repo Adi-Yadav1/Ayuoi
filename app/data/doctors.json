@@ -1,0 +1,68 @@
+[
+  {
+    "id": "doc-001",
+    "name": "Dr. Ananya Sharma",
+    "specialization": "Panchakarma",
+    "experienceYears": 12,
+    "consultationFee": 800,
+    "rating": 4.8,
+    "location": "Jaipur",
+    "languages": ["Hindi", "English"],
+    "about": "Focuses on detox therapies and chronic digestion support."
+  },
+  {
+    "id": "doc-002",
+    "name": "Dr. Rohan Mehta",
+    "specialization": "Kayachikitsa",
+    "experienceYears": 9,
+    "consultationFee": 600,
+    "rating": 4.6,
+    "location": "Ahmedabad",
+    "languages": ["Gujarati", "English"],
+    "about": "General medicine with emphasis on lifestyle and diet corrections."
+  },
+  {
+    "id": "doc-003",
+    "name": "Dr. Priya Nair",
+    "specialization": "Streeroga",
+    "experienceYears": 11,
+    "consultationFee": 700,
+    "rating": 4.7,
+    "location": "Kochi",
+    "languages": ["Malayalam", "English"],
+    "about": "Women’s health, menstrual wellness, and fertility care."
+  },
+  {
+    "id": "doc-004",
+    "name": "Dr. Arjun Rao",
+    "specialization": "Shalya Tantra",
+    "experienceYears": 14,
+    "consultationFee": 1200,
+    "rating": 4.5,
+    "location": "Bengaluru",
+    "languages": ["Kannada", "English"],
+    "about": "Surgical procedures and pain management with Ayurvedic methods."
+  },
+  {
+    "id": "doc-005",
+    "name": "Dr. Meera Iyer",
+    "specialization": "Balaroga",
+    "experienceYears": 8,
+    "consultationFee": 500,
+    "rating": 4.9,
+    "location": "Chennai",
+    "languages": ["Tamil", "English"],
+    "about": "Pediatric care, immunity building, and growth support."
+  },
+  {
+    "id": "doc-006",
+    "name": "Dr. Kunal Desai",
+    "specialization": "Rasayana",
+    "experienceYears": 10,
+    "consultationFee": 900,
+    "rating": 4.4,
+    "location": "Mumbai",
+    "languages": ["Marathi", "English"],
+    "about": "Rejuvenation therapies and anti-aging programs."
+  }
+]

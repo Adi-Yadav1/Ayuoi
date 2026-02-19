@@ -295,6 +295,26 @@ export default function ProfileScreen() {
             </Section>
           )}
 
+          {/* Analytics Overview */}
+          <Section title="Analytics Overview">
+            <Card style={{ marginBottom: 16 }}>
+              <View>
+                <Text style={{ fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                  Your wellness trends at a glance
+                </Text>
+                <Text style={{ color: '#6B7280', fontSize: 14 }}>
+                  See nutrition progress, dosha balance, and weekly insights.
+                </Text>
+                <Button
+                  title="View Analytics"
+                  variant="outline"
+                  style={{ marginTop: 12 }}
+                  onPress={() => router.push('/(app)/(tabs)/analytics')}
+                />
+              </View>
+            </Card>
+          </Section>
+
           {/* Health Profile */}
           {health && (
             <Section title="Health Profile">

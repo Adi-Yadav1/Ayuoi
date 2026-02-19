@@ -9,6 +9,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FEFAF5',
+    
   },
   scrollView: {
     flex: 1,
@@ -188,6 +189,7 @@ const styles = StyleSheet.create({
   ctaButton: {
     marginTop: 32,
     marginBottom: 32,
+    
   },
 });
 

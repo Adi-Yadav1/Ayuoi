@@ -75,6 +75,15 @@ export default function TabLayout() {
         }}
       />
       <Tab.Screen
+        name="analytics"
+        component={AnalyticsScreen}
+        options={{
+          title: 'Analytics',
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
+      />
+      <Tab.Screen
         name="profile"
         component={ProfileScreen}
         options={{
