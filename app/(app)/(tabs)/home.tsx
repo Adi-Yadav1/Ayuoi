@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
 import { getPrakritiResultAsync } from '@/app/services/prakritiService';
 import { getHighPrioritySuggestions } from '@/app/services/dietarySuggestionService';
@@ -9,10 +11,59 @@ import { PrakritiResult, DietarySuggestion } from '@/app/types';
 import { useAuth } from '@/app/context/AuthContext';
 import { apiClient } from '@/app/services/apiClient';
 
+const modelValidValues = require('@/model_valid_values.json') as {
+  Prakriti_Model: Record<string, string[]>;
+  Imbalance_Model: Record<string, string[]>;
+};
+
+const AYURVEDA_QUOTES = [
+  'When diet is wrong, medicine is of no use.',
+  'Health is the greatest gift; contentment, the greatest wealth.',
+  'Treat the cause, not just the symptom.',
+  'Balance is the key to harmony in body and mind.',
+  'Food is medicine when chosen with awareness.',
+];
+
+const PRAKRITI_OPTIONS = {
+  body_size: modelValidValues.Prakriti_Model['Body Size'],
+  body_weight_tendency: modelValidValues.Prakriti_Model['Body Weight'],
+  height: modelValidValues.Prakriti_Model['Height'],
+  bone_structure: modelValidValues.Prakriti_Model['Bone Structure'],
+  complexion: modelValidValues.Prakriti_Model['Complexion'],
+  skin_type: modelValidValues.Prakriti_Model['General feel of skin'],
+  skin_texture: modelValidValues.Prakriti_Model['Texture of Skin'],
+  hair_color: modelValidValues.Prakriti_Model['Hair Color'],
+  hair_appearance: modelValidValues.Prakriti_Model['Appearance of Hair'],
+  face_shape: modelValidValues.Prakriti_Model['Shape of face'],
+  eyes: modelValidValues.Prakriti_Model['Eyes'],
+  eyelashes: modelValidValues.Prakriti_Model['Eyelashes'],
+  blinking_pattern: modelValidValues.Prakriti_Model['Blinking of Eyes'],
+  cheeks: modelValidValues.Prakriti_Model['Cheeks'],
+  nose_shape: modelValidValues.Prakriti_Model['Nose'],
+  teeth_structure: modelValidValues.Prakriti_Model['Teeth and gums'],
+  lips: modelValidValues.Prakriti_Model['Lips'],
+  nails: modelValidValues.Prakriti_Model['Nails'],
+  appetite: modelValidValues.Prakriti_Model['Appetite'],
+  taste_preference: modelValidValues.Prakriti_Model['Liking tastes'],
+};
+
+const DOSHA_OPTIONS = {
+  sleep_quality: modelValidValues.Imbalance_Model['Sleep Patterns'],
+  stress_level: modelValidValues.Imbalance_Model['Stress Levels'],
+  physical_activity_level: modelValidValues.Imbalance_Model['Physical Activity Levels'],
+  season: modelValidValues.Imbalance_Model['Seasonal Variation'],
+  age_group: modelValidValues.Imbalance_Model['Age Group'],
+  gender: modelValidValues.Imbalance_Model['Gender'],
+  work_type: modelValidValues.Imbalance_Model['Occupation and Lifestyle'],
+  cultural_diet_preference: modelValidValues.Imbalance_Model['Cultural Preferences'],
+  climate_exposure: modelValidValues.Imbalance_Model['Environmental Factors'],
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF7EC',
+    // paddingTop: 8,
   },
   scrollView: {
     flex: 1,
@@ -335,9 +386,13 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     padding: 20,
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
   modalCard: {
     backgroundColor: '#FFFFFF',
@@ -378,7 +433,43 @@ const styles = StyleSheet.create({
     color: '#111827',
     backgroundColor: '#F9FAFB',
   },
+  pickerWrap: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
+    overflow: 'hidden',
+  },
+  picker: {
+    color: '#111827',
+  },
 });
+
+type DropdownFieldProps = {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+};
+
+function DropdownField({ label, value, options, onChange }: DropdownFieldProps) {
+  return (
+    <View style={styles.inputBlock}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <View style={styles.pickerWrap}>
+        <Picker
+          selectedValue={value}
+          onValueChange={onChange}
+          style={styles.picker}
+        >
+          {options.map((option) => (
+            <Picker.Item key={option} label={option} value={option} />
+          ))}
+        </Picker>
+      </View>
+    </View>
+  );
+}
 
 export default function HomeScreen() {
   const [prakriti, setPrakriti] = useState<PrakritiResult | null>(null);
@@ -388,79 +479,48 @@ export default function HomeScreen() {
   const [isPrakritiSubmitting, setIsPrakritiSubmitting] = useState(false);
   const [isDoshaSubmitting, setIsDoshaSubmitting] = useState(false);
   const { user } = useAuth();
+  const [dailyQuote, setDailyQuote] = useState(AYURVEDA_QUOTES[0]);
   const [prakritiForm, setPrakritiForm] = useState({
-    body_size: '',
-    body_weight_tendency: '',
-    height: '',
-    bone_structure: '',
-    body_frame: '',
-    complexion: '',
-    skin_type: '',
-    skin_texture: '',
-    hair_color: '',
-    hair_density: '',
-    hair_texture: '',
-    hair_appearance: '',
-    hair_graying: '',
-    face_shape: '',
-    cheeks: '',
-    jaw_structure: '',
-    eyes: '',
-    eye_luster: '',
-    eyelashes: '',
-    blinking_pattern: '',
-    nose_shape: '',
-    nose_tip: '',
-    teeth_structure: '',
-    teeth_gums: '',
-    lips: '',
-    nails: '',
-    appetite: '',
-    digestion_speed: '',
-    hunger_frequency: '',
-    thirst_level: '',
-    sweating: '',
-    bowel_habit: '',
-    taste_preference: '',
-    food_temperature_preference: '',
-    weather_preference: '',
+    body_size: 'Medium',
+    body_weight_tendency: 'Moderate - no difficulties in gaining or losing weight',
+    height: 'Average',
+    bone_structure: 'Medium bone structure',
+    complexion: 'Fair-skin sunburns easily',
+    skin_type: 'Smooth and warm, oily T-zone',
+    skin_texture: 'Freckles, many moles, redness and rashes',
+    hair_color: 'Red, light brown, yellow',
+    hair_appearance: 'Straight, oily',
+    face_shape: 'Heart-shaped, pointed chin',
+    eyes: 'Medium-sized, penetrating, light-sensitive eyes',
+    eyelashes: 'Moderate eyelashes',
+    blinking_pattern: 'Moderate Blinking',
+    cheeks: 'Smooth, Flat',
+    nose_shape: 'Pointed, Average',
+    teeth_structure: 'Medium-sized teeth, Reddish gums',
+    lips: 'Lips are soft, medium-sized',
+    nails: 'Sharp, Flexible, Pink, Lustrous',
+    appetite: 'Strong, Unbearable',
+    taste_preference: 'Pungent / Bitter / Astringent',
   });
 
   const [isDoshaFormOpen, setIsDoshaFormOpen] = useState(false);
   const [doshaForm, setDoshaForm] = useState({
-    current_symptoms: '',
-    symptom_duration: '',
-    symptom_severity: '',
-    medical_history: '',
-    current_medications: '',
-    appetite_level: '',
-    digestion_quality: '',
-    bowel_pattern: '',
-    gas_bloating: '',
-    acidity_burning: '',
-    sleep_quality: '',
-    sleep_duration: '',
-    daytime_energy: '',
-    mental_state: '',
-    stress_level: '',
-    physical_activity_level: '',
-    daily_routine_consistency: '',
-    work_type: '',
-    travel_frequency: '',
-    diet_type: '',
-    food_quality: '',
-    taste_dominance: '',
-    meal_timing_regular: '',
-    hydration_level: '',
-    caffeine_intake: '',
-    climate_exposure: '',
-    season: '',
-    pollution_exposure: '',
-    screen_exposure: '',
-    age_group: '',
-    gender: '',
-    occupation: '',
-    cultural_diet_preference: '',
+    current_symptoms: 'Frequent headaches and digestive issues',
+    medical_history: 'No major surgeries',
+    digestion_quality: 'Irregular digestion with bloating',
+    mental_state: 'Anxious and restless at times',
+    current_medications: 'None',
+    bowel_pattern: 'Irregular bowel movements',
+    gas_bloating: 'Frequent gas after meals',
+    sleep_quality: 'Irregular Sleep',
+    stress_level: 'Moderate Stress',
+    physical_activity_level: 'Moderate',
+    season: 'Summer season',
+    age_group: '20-40 years',
+    gender: 'Male',
+    work_type: 'Desk Job, High stress',
+    cultural_diet_preference: 'Avoids spicy foods',
+    climate_exposure: 'High-stress environments',
   });
 
   useEffect(() => {
@@ -483,6 +543,11 @@ export default function HomeScreen() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * AYURVEDA_QUOTES.length);
+    setDailyQuote(AYURVEDA_QUOTES[randomIndex]);
+  }, []);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -491,21 +556,15 @@ export default function HomeScreen() {
     );
   }
 
-  const getTimeOfDayGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
-  };
 
   const getDoshaColor = (dosha: string): string => {
     switch (dosha) {
       case 'vata':
-        return '#667E';
+        return '#667EEA';
       case 'pitta':
-        return '#F71C';
+        return '#F76B1C';
       case 'kapha':
-        return '#4FCFE';
+        return '#4FACFE';
       default:
         return '#EE9B4D';
     }
@@ -518,7 +577,7 @@ export default function HomeScreen() {
           {/* Hero Section with Greeting */}
           <View style={styles.heroSection}>
             <View style={styles.greetingContainer}>
-              <Text style={styles.greetingSubtitle}>{getTimeOfDayGreeting()}</Text>
+              <Text style={styles.greetingSubtitle}>{dailyQuote}</Text>
               <Text style={styles.greetingTitle}>
                 {user?.username ? user.username : 'Welcome Back'}
               </Text>
@@ -595,6 +654,8 @@ export default function HomeScreen() {
             onRequestClose={() => setIsPrakritiFormOpen(false)}
           >
             <View style={styles.modalBackdrop}>
+              <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
+              <View style={styles.modalOverlay} />
               <View style={styles.modalCard}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Prakriti Form</Text>
@@ -605,61 +666,43 @@ export default function HomeScreen() {
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                   {[
-                    { key: 'body_size', label: 'Body Size' },
-                    { key: 'body_weight_tendency', label: 'Body Weight Tendency' },
-                    { key: 'height', label: 'Height' },
-                    { key: 'bone_structure', label: 'Bone Structure' },
-                    { key: 'body_frame', label: 'Body Frame' },
-                    { key: 'complexion', label: 'Complexion' },
-                    { key: 'skin_type', label: 'Skin Type' },
-                    { key: 'skin_texture', label: 'Skin Texture' },
-                    { key: 'hair_color', label: 'Hair Color' },
-                    { key: 'hair_density', label: 'Hair Density' },
-                    { key: 'hair_texture', label: 'Hair Texture' },
-                    { key: 'hair_appearance', label: 'Hair Appearance' },
-                    { key: 'hair_graying', label: 'Hair Graying' },
-                    { key: 'face_shape', label: 'Face Shape' },
-                    { key: 'cheeks', label: 'Cheeks' },
-                    { key: 'jaw_structure', label: 'Jaw Structure' },
-                    { key: 'eyes', label: 'Eyes' },
-                    { key: 'eye_luster', label: 'Eye Luster' },
-                    { key: 'eyelashes', label: 'Eyelashes' },
-                    { key: 'blinking_pattern', label: 'Blinking Pattern' },
-                    { key: 'nose_shape', label: 'Nose Shape' },
-                    { key: 'nose_tip', label: 'Nose Tip' },
-                    { key: 'teeth_structure', label: 'Teeth Structure' },
-                    { key: 'teeth_gums', label: 'Teeth Gums' },
-                    { key: 'lips', label: 'Lips' },
-                    { key: 'nails', label: 'Nails' },
-                    { key: 'appetite', label: 'Appetite' },
-                    { key: 'digestion_speed', label: 'Digestion Speed' },
-                    { key: 'hunger_frequency', label: 'Hunger Frequency' },
-                    { key: 'thirst_level', label: 'Thirst Level' },
-                    { key: 'sweating', label: 'Sweating' },
-                    { key: 'bowel_habit', label: 'Bowel Habit' },
-                    { key: 'taste_preference', label: 'Taste Preference' },
-                    { key: 'food_temperature_preference', label: 'Food Temperature Preference' },
-                    { key: 'weather_preference', label: 'Weather Preference' },
+                    { key: 'body_size', label: 'Body Size', options: PRAKRITI_OPTIONS.body_size },
+                    { key: 'body_weight_tendency', label: 'Body Weight Tendency', options: PRAKRITI_OPTIONS.body_weight_tendency },
+                    { key: 'height', label: 'Height', options: PRAKRITI_OPTIONS.height },
+                    { key: 'bone_structure', label: 'Bone Structure', options: PRAKRITI_OPTIONS.bone_structure },
+                    { key: 'complexion', label: 'Complexion', options: PRAKRITI_OPTIONS.complexion },
+                    { key: 'skin_type', label: 'Skin Type', options: PRAKRITI_OPTIONS.skin_type },
+                    { key: 'skin_texture', label: 'Skin Texture', options: PRAKRITI_OPTIONS.skin_texture },
+                    { key: 'hair_color', label: 'Hair Color', options: PRAKRITI_OPTIONS.hair_color },
+                    { key: 'hair_appearance', label: 'Hair Appearance', options: PRAKRITI_OPTIONS.hair_appearance },
+                    { key: 'face_shape', label: 'Face Shape', options: PRAKRITI_OPTIONS.face_shape },
+                    { key: 'eyes', label: 'Eyes', options: PRAKRITI_OPTIONS.eyes },
+                    { key: 'eyelashes', label: 'Eyelashes', options: PRAKRITI_OPTIONS.eyelashes },
+                    { key: 'blinking_pattern', label: 'Blinking Pattern', options: PRAKRITI_OPTIONS.blinking_pattern },
+                    { key: 'cheeks', label: 'Cheeks', options: PRAKRITI_OPTIONS.cheeks },
+                    { key: 'nose_shape', label: 'Nose Shape', options: PRAKRITI_OPTIONS.nose_shape },
+                    { key: 'teeth_structure', label: 'Teeth Structure', options: PRAKRITI_OPTIONS.teeth_structure },
+                    { key: 'lips', label: 'Lips', options: PRAKRITI_OPTIONS.lips },
+                    { key: 'nails', label: 'Nails', options: PRAKRITI_OPTIONS.nails },
+                    { key: 'appetite', label: 'Appetite', options: PRAKRITI_OPTIONS.appetite },
+                    { key: 'taste_preference', label: 'Taste Preference', options: PRAKRITI_OPTIONS.taste_preference },
                   ].map((field) => (
-                    <View key={field.key} style={styles.inputBlock}>
-                      <Text style={styles.inputLabel}>{field.label}</Text>
-                      <TextInput
-                        style={styles.inputField}
-                        value={prakritiForm[field.key as keyof typeof prakritiForm]}
-                        onChangeText={(value) =>
-                          setPrakritiForm((prev) => ({
-                            ...prev,
-                            [field.key]: value,
-                          }))
-                        }
-                        placeholder={`Enter ${field.label.toLowerCase()}`}
-                        placeholderTextColor="#9CA3AF"
-                      />
-                    </View>
+                    <DropdownField
+                      key={field.key}
+                      label={field.label}
+                      value={prakritiForm[field.key as keyof typeof prakritiForm]}
+                      options={field.options}
+                      onChange={(value) =>
+                        setPrakritiForm((prev) => ({
+                          ...prev,
+                          [field.key]: value,
+                        }))
+                      }
+                    />
                   ))}
 
                   <Button
-                    title={isPrakritiSubmitting ? 'Saving...' : 'Save Prakriti'}
+                    title={isPrakritiSubmitting ? 'Predicting...' : 'Predict Prakriti'}
                     onPress={async () => {
                       if (!user) {
                         Alert.alert('Error', 'User not found. Please login again.');
@@ -667,11 +710,6 @@ export default function HomeScreen() {
                       }
 
                       try {
-                        setIsPrakritiSubmitting(true);
-                        const response = await apiClient.submitPrakritiTraits(prakritiForm);
-                        console.log('Prakriti submission response:', response);
-                        
-                        // Check if any field is empty
                         const emptyFields = Object.entries(prakritiForm).filter(([_, value]) => value === '');
                         if (emptyFields.length > 0) {
                           Alert.alert(
@@ -681,52 +719,18 @@ export default function HomeScreen() {
                           return;
                         }
 
-                        Alert.alert('Success', 'Prakriti assessment submitted successfully!', [
-                          {
-                            text: 'OK',
-                            onPress: () => {
-                              setIsPrakritiFormOpen(false);
-                              // Reset form
-                              setPrakritiForm({
-                                body_size: '',
-                                body_weight_tendency: '',
-                                height: '',
-                                bone_structure: '',
-                                body_frame: '',
-                                complexion: '',
-                                skin_type: '',
-                                skin_texture: '',
-                                hair_color: '',
-                                hair_density: '',
-                                hair_texture: '',
-                                hair_appearance: '',
-                                hair_graying: '',
-                                face_shape: '',
-                                cheeks: '',
-                                jaw_structure: '',
-                                eyes: '',
-                                eye_luster: '',
-                                eyelashes: '',
-                                blinking_pattern: '',
-                                nose_shape: '',
-                                nose_tip: '',
-                                teeth_structure: '',
-                                teeth_gums: '',
-                                lips: '',
-                                nails: '',
-                                appetite: '',
-                                digestion_speed: '',
-                                hunger_frequency: '',
-                                thirst_level: '',
-                                sweating: '',
-                                bowel_habit: '',
-                                taste_preference: '',
-                                food_temperature_preference: '',
-                                weather_preference: '',
-                              });
-                            },
+                        setIsPrakritiSubmitting(true);
+                        const response = await apiClient.predictPrakriti(prakritiForm);
+                        const resultData = response.data || response;
+
+                        setIsPrakritiFormOpen(false);
+                        router.push({
+                          pathname: '/(app)/prediction-result',
+                          params: {
+                            type: 'prakriti',
+                            data: JSON.stringify(resultData),
                           },
-                        ]);
+                        });
                       } catch (error) {
                         console.error('Prakriti submission error:', error);
                         Alert.alert(
@@ -751,6 +755,8 @@ export default function HomeScreen() {
             onRequestClose={() => setIsDoshaFormOpen(false)}
           >
             <View style={styles.modalBackdrop}>
+              <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
+              <View style={styles.modalOverlay} />
               <View style={styles.modalCard}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Dosha Assessment</Text>
@@ -762,38 +768,12 @@ export default function HomeScreen() {
                 <ScrollView showsVerticalScrollIndicator={false}>
                   {[
                     { key: 'current_symptoms', label: 'Current Symptoms' },
-                    { key: 'symptom_duration', label: 'Symptom Duration' },
-                    { key: 'symptom_severity', label: 'Symptom Severity' },
                     { key: 'medical_history', label: 'Medical History' },
-                    { key: 'current_medications', label: 'Current Medications' },
-                    { key: 'appetite_level', label: 'Appetite Level' },
                     { key: 'digestion_quality', label: 'Digestion Quality' },
+                    { key: 'mental_state', label: 'Mental State' },
+                    { key: 'current_medications', label: 'Current Medications' },
                     { key: 'bowel_pattern', label: 'Bowel Pattern' },
                     { key: 'gas_bloating', label: 'Gas/Bloating' },
-                    { key: 'acidity_burning', label: 'Acidity/Burning' },
-                    { key: 'sleep_quality', label: 'Sleep Quality' },
-                    { key: 'sleep_duration', label: 'Sleep Duration' },
-                    { key: 'daytime_energy', label: 'Daytime Energy' },
-                    { key: 'mental_state', label: 'Mental State' },
-                    { key: 'stress_level', label: 'Stress Level' },
-                    { key: 'physical_activity_level', label: 'Physical Activity Level' },
-                    { key: 'daily_routine_consistency', label: 'Daily Routine Consistency' },
-                    { key: 'work_type', label: 'Work Type' },
-                    { key: 'travel_frequency', label: 'Travel Frequency' },
-                    { key: 'diet_type', label: 'Diet Type' },
-                    { key: 'food_quality', label: 'Food Quality' },
-                    { key: 'taste_dominance', label: 'Taste Dominance' },
-                    { key: 'meal_timing_regular', label: 'Meal Timing Regular' },
-                    { key: 'hydration_level', label: 'Hydration Level' },
-                    { key: 'caffeine_intake', label: 'Caffeine Intake' },
-                    { key: 'climate_exposure', label: 'Climate Exposure' },
-                    { key: 'season', label: 'Season' },
-                    { key: 'pollution_exposure', label: 'Pollution Exposure' },
-                    { key: 'screen_exposure', label: 'Screen Exposure' },
-                    { key: 'age_group', label: 'Age Group' },
-                    { key: 'gender', label: 'Gender' },
-                    { key: 'occupation', label: 'Occupation' },
-                    { key: 'cultural_diet_preference', label: 'Cultural Diet Preference' },
                   ].map((field) => (
                     <View key={field.key} style={styles.inputBlock}>
                       <Text style={styles.inputLabel}>{field.label}</Text>
@@ -812,8 +792,33 @@ export default function HomeScreen() {
                     </View>
                   ))}
 
+                  {[
+                    { key: 'sleep_quality', label: 'Sleep Quality', options: DOSHA_OPTIONS.sleep_quality },
+                    { key: 'stress_level', label: 'Stress Level', options: DOSHA_OPTIONS.stress_level },
+                    { key: 'physical_activity_level', label: 'Physical Activity Level', options: DOSHA_OPTIONS.physical_activity_level },
+                    { key: 'season', label: 'Season', options: DOSHA_OPTIONS.season },
+                    { key: 'age_group', label: 'Age Group', options: DOSHA_OPTIONS.age_group },
+                    { key: 'gender', label: 'Gender', options: DOSHA_OPTIONS.gender },
+                    { key: 'work_type', label: 'Work Type', options: DOSHA_OPTIONS.work_type },
+                    { key: 'cultural_diet_preference', label: 'Cultural Diet Preference', options: DOSHA_OPTIONS.cultural_diet_preference },
+                    { key: 'climate_exposure', label: 'Climate Exposure', options: DOSHA_OPTIONS.climate_exposure },
+                  ].map((field) => (
+                    <DropdownField
+                      key={field.key}
+                      label={field.label}
+                      value={doshaForm[field.key as keyof typeof doshaForm]}
+                      options={field.options}
+                      onChange={(value) =>
+                        setDoshaForm((prev) => ({
+                          ...prev,
+                          [field.key]: value,
+                        }))
+                      }
+                    />
+                  ))}
+
                   <Button
-                    title={isDoshaSubmitting ? 'Submitting...' : 'Analyze Dosha'}
+                    title={isDoshaSubmitting ? 'Predicting...' : 'Predict Dosha'}
                     onPress={async () => {
                       if (!user) {
                         Alert.alert('Error', 'User not found. Please login again.');
@@ -821,8 +826,6 @@ export default function HomeScreen() {
                       }
 
                       try {
-                        setIsDoshaSubmitting(true);
-                        
                         // Check if any field is empty
                         const emptyFields = Object.entries(doshaForm).filter(([_, value]) => value === '');
                         if (emptyFields.length > 0) {
@@ -833,53 +836,18 @@ export default function HomeScreen() {
                           return;
                         }
 
-                        const response = await apiClient.submitDoshaTraits(doshaForm);
-                        console.log('Dosha submission response:', response);
-                        
-                        Alert.alert('Success', 'Dosha assessment submitted successfully!', [
-                          {
-                            text: 'OK',
-                            onPress: () => {
-                              setIsDoshaFormOpen(false);
-                              // Reset form
-                              setDoshaForm({
-                                current_symptoms: '',
-                                symptom_duration: '',
-                                symptom_severity: '',
-                                medical_history: '',
-                                current_medications: '',
-                                appetite_level: '',
-                                digestion_quality: '',
-                                bowel_pattern: '',
-                                gas_bloating: '',
-                                acidity_burning: '',
-                                sleep_quality: '',
-                                sleep_duration: '',
-                                daytime_energy: '',
-                                mental_state: '',
-                                stress_level: '',
-                                physical_activity_level: '',
-                                daily_routine_consistency: '',
-                                work_type: '',
-                                travel_frequency: '',
-                                diet_type: '',
-                                food_quality: '',
-                                taste_dominance: '',
-                                meal_timing_regular: '',
-                                hydration_level: '',
-                                caffeine_intake: '',
-                                climate_exposure: '',
-                                season: '',
-                                pollution_exposure: '',
-                                screen_exposure: '',
-                                age_group: '',
-                                gender: '',
-                                occupation: '',
-                                cultural_diet_preference: '',
-                              });
-                            },
+                        setIsDoshaSubmitting(true);
+                        const response = await apiClient.predictDosha(doshaForm);
+                        const resultData = response.data || response;
+
+                        setIsDoshaFormOpen(false);
+                        router.push({
+                          pathname: '/(app)/prediction-result',
+                          params: {
+                            type: 'dosha',
+                            data: JSON.stringify(resultData),
                           },
-                        ]);
+                        });
                       } catch (error) {
                         console.error('Dosha submission error:', error);
                         Alert.alert(

@@ -255,6 +255,7 @@ const styles = StyleSheet.create({
 	safeArea: {
 		flex: 1,
 		backgroundColor: "#FFF7EC",
+		paddingTop: 8,
 	},
 	backgroundGlowA: {
 		position: "absolute",

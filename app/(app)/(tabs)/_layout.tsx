@@ -8,6 +8,7 @@ import FoodTrackingScreen from './food-tracking';
 import AnalyticsScreen from './analytics';
 import ProfileScreen from './profile';
 import Dietitian from '../(tabs)/dietAI'
+import DoctorScreen from '../(tabs)/doctor'
 
 const Tab = createBottomTabNavigator();
 
@@ -21,9 +22,11 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: '#FEFAF5',
           borderTopColor: '#f0f0f0',
-          paddingBottom: 5,
+          paddingBottom: 12,
           paddingTop: 5,
-          height: 60
+          height: 72,
+          position: 'absolute',
+          
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -52,7 +55,7 @@ export default function TabLayout() {
         component={Dietitian}
         options={{
           title: 'Diet',
-          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="book-open" size={24} color={color} />
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="robot" size={24} color={color} />
         }}
       />
       <Tab.Screen
@@ -64,11 +67,11 @@ export default function TabLayout() {
         }}
       />
       <Tab.Screen
-        name="analytics"
-        component={AnalyticsScreen}
+        name="doctor"
+        component={DoctorScreen}
         options={{
-          title: 'Analytics',
-          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="chart-line" size={24} color={color} />
+          title: 'Doctor',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="stethoscope" size={24} color={color} />
         }}
       />
       <Tab.Screen

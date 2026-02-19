@@ -179,6 +179,21 @@ class APIClient {
     return response;
   }
 
+  async predictPrakriti(payload: Record<string, string>) {
+    const response = await this.makeRequest('POST', '/profile/predict/prakriti', payload);
+    return response;
+  }
+
+  async predictDosha(payload: Record<string, string>) {
+    const response = await this.makeRequest('POST', '/profile/predict/dosha', payload);
+    return response;
+  }
+
+  async getPredictions() {
+    const response = await this.makeRequest('GET', '/profile/predictions');
+    return response;
+  }
+
   // ──────────────────────────────────────────────
   // FOOD & NUTRITION ENDPOINTS
   // ──────────────────────────────────────────────

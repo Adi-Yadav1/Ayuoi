@@ -69,8 +69,8 @@ const styles = StyleSheet.create({
 });
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('test@prakriti.ai');
-  const [password, setPassword] = useState('Test@123');
+  const [email, setEmail] = useState('adityayadav.gz1@gmail.com');
+  const [password, setPassword] = useState('123456');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signIn } = useAuth();
