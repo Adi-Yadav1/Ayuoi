@@ -1,16 +1,19 @@
+import { useAuth } from "@/app/context/AuthContext";
+import { apiClient } from "@/app/services/apiClient";
 import React, { useEffect, useRef, useState } from "react";
 import {
-	Animated,
-	FlatList,
-	Keyboard,
-	Platform,
-	SafeAreaView,
-	StatusBar,
-	StyleSheet,
-	Text,
-	TextInput,
-	TouchableOpacity,
-	View,
+  Alert,
+  Animated,
+  FlatList,
+  Keyboard,
+  Platform,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type ChatMessage = {
@@ -34,18 +37,6 @@ const MOCK_MESSAGES: ChatMessage[] = [
     text: "Hello. I can help with personalized diet suggestions, meal timing, and routines. Ask me anything.",
     time: "09:12",
   },
-  {
-    id: "m2",
-    role: "user",
-    text: "What should I eat for a light lunch?",
-    time: "09:14",
-  },
-  {
-    id: "m3",
-    role: "assistant",
-    text: "Try a warm vegetable bowl with cumin, ginger, and a small portion of grains. Avoid heavy fried foods.",
-    time: "09:15",
-  },
 ];
 
 const fontFamily = Platform.select({
@@ -55,6 +46,7 @@ const fontFamily = Platform.select({
 });
 
 export default function DietAI() {
+  const { token } = useAuth();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(MOCK_MESSAGES);
   const [isSending, setIsSending] = useState(false);
@@ -109,9 +101,16 @@ export default function DietAI() {
   };
 
   const sendToApi = async (message: string) => {
-    // Placeholder for your API call. Replace with fetch when ready.
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    return `Got it. I will help with: ${message}`;
+    if (!token) {
+      Alert.alert(
+        "Login Required",
+        "Please log in to use Diet AI recommendations.",
+      );
+      return "Please log in to continue. Once signed in, I can help with diet recommendations.";
+    }
+
+    const dosha = "vata";
+    return await apiClient.chatbotChat(dosha, message);
   };
 
   const handleSend = async (text?: string) => {
@@ -137,6 +136,15 @@ export default function DietAI() {
         id: `a-${Date.now()}`,
         role: "assistant",
         text: reply,
+        time: getTimeStamp(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Chatbot request failed:", error);
+      const assistantMessage: ChatMessage = {
+        id: `a-${Date.now()}`,
+        role: "assistant",
+        text: "Sorry, I couldn't reach the chatbot. Please try again in a moment.",
         time: getTimeStamp(),
       };
       setMessages((prev) => [...prev, assistantMessage]);

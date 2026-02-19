@@ -22,8 +22,7 @@ import {
 } from "@/app/types/index";
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ||
-  "https://prakriti-api.onrender.com/api";
+  process.env.EXPO_PUBLIC_API_URL || "https://prakriti-api.onrender.com/api";
 
 class APIClient {
   private baseURL: string;
@@ -465,6 +464,24 @@ class APIClient {
       `/users/${userId}/dinacharya-logs?date=${date}`,
     );
     return response;
+  }
+
+  // ──────────────────────────────────────────────
+  // CHATBOT ENDPOINTS
+  // ──────────────────────────────────────────────
+
+  async chatbotChat(dosha: string, message: string): Promise<string> {
+    const response = await this.makeRequest("POST", "/chatbot/chat", {
+      dosha,
+      message,
+    });
+
+    const responseText = response?.data?.response || response?.response;
+    if (!responseText) {
+      throw new Error("Unexpected chatbot response");
+    }
+
+    return responseText as string;
   }
 
   // ──────────────────────────────────────────────
