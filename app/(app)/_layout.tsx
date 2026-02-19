@@ -6,6 +6,8 @@ export default function AppLayout() {
       <Stack.Screen name="dashboard" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="prakriti-history" />
+      <Stack.Screen name="dosha-history" />
     </Stack>
   );
 }

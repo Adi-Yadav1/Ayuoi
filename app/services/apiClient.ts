@@ -159,6 +159,26 @@ class APIClient {
   }
 
   // ──────────────────────────────────────────────
+  // PROFILE PREDICTION HISTORY ENDPOINTS
+  // ──────────────────────────────────────────────
+
+  async getPrakritiHistory() {
+    const response = await this.makeRequest(
+      "GET",
+      "/profile/predictions/prakriti-history",
+    );
+    return response?.data?.history || response?.history || [];
+  }
+
+  async getDoshaHistory() {
+    const response = await this.makeRequest(
+      "GET",
+      "/profile/predictions/dosha-history",
+    );
+    return response?.data?.history || response?.history || [];
+  }
+
+  // ──────────────────────────────────────────────
   // PRAKRITI ASSESSMENT ENDPOINTS
   // ──────────────────────────────────────────────
 

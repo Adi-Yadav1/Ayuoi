@@ -1,11 +1,14 @@
 import { useAuth } from "@/app/context/AuthContext";
 import { getHealthProfile } from "@/app/services/analyticsService";
+import { apiClient } from "@/app/services/apiClient";
 import { getPrakritiResultAsync } from "@/app/services/prakritiService";
 import { HealthProfile, PrakritiResult } from "@/app/types";
 import { Button, Card, Loader, Section } from "@/components/ui/Button";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -162,6 +165,68 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#111827",
   },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 12,
+  },
+  modalOption: {
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  modalOptionText: {
+    fontWeight: "600",
+    color: "#111827",
+  },
+  modalBackText: {
+    color: "#6B7280",
+    fontWeight: "600",
+  },
+  historyItem: {
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: "#FAFAF9",
+  },
+  historyTitle: {
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 6,
+  },
+  historyMeta: {
+    color: "#6B7280",
+    fontSize: 12,
+  },
+  historyDetail: {
+    color: "#374151",
+    fontSize: 13,
+    marginTop: 6,
+  },
+  historyEmpty: {
+    color: "#6B7280",
+    fontSize: 13,
+    textAlign: "center",
+    paddingVertical: 16,
+  },
   versionContainer: {
     alignItems: "center",
     paddingBottom: 24,
@@ -177,11 +242,35 @@ const styles = StyleSheet.create({
   },
 });
 
+type PrakritiHistoryItem = {
+  id: string;
+  inputData: Record<string, string>;
+  prakritiType: string;
+  createdAt: string;
+};
+
+type DoshaHistoryItem = {
+  id: string;
+  inputData: Record<string, string>;
+  imbalances: string[];
+  imbalanceType: string;
+  createdAt: string;
+};
+
 export default function ProfileScreen() {
   const { user } = useAuth();
   const [prakriti, setPrakriti] = useState<PrakritiResult | null>(null);
   const [health, setHealth] = useState<HealthProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [historyModalVisible, setHistoryModalVisible] = useState(false);
+  const [historyType, setHistoryType] = useState<"prakriti" | "dosha" | null>(
+    null,
+  );
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [prakritiHistory, setPrakritiHistory] = useState<PrakritiHistoryItem[]>(
+    [],
+  );
+  const [doshaHistory, setDoshaHistory] = useState<DoshaHistoryItem[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -202,6 +291,24 @@ export default function ProfileScreen() {
       console.error("Error loading profile:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadHistory = async (type: "prakriti" | "dosha") => {
+    setHistoryType(type);
+    setHistoryLoading(true);
+    try {
+      if (type === "prakriti") {
+        const items = await apiClient.getPrakritiHistory();
+        setPrakritiHistory(items as PrakritiHistoryItem[]);
+      } else {
+        const items = await apiClient.getDoshaHistory();
+        setDoshaHistory(items as DoshaHistoryItem[]);
+      }
+    } catch (error) {
+      console.error("Error loading history:", error);
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -456,6 +563,15 @@ export default function ProfileScreen() {
           {/* Settings */}
           <Section title="Settings">
             <View>
+              <TouchableOpacity
+                style={styles.settingButton}
+                onPress={() => {
+                  setHistoryModalVisible(true);
+                  setHistoryType(null);
+                }}
+              >
+                <Text style={styles.settingButtonText}>History</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={styles.settingButton}>
                 <Text style={styles.settingButtonText}>Edit Profile</Text>
               </TouchableOpacity>
@@ -492,6 +608,91 @@ export default function ProfileScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <Modal visible={historyModalVisible} transparent animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            {historyType === null ? (
+              <>
+                <Text style={styles.modalTitle}>View History</Text>
+                <TouchableOpacity
+                  style={styles.modalOption}
+                  onPress={() => loadHistory("prakriti")}
+                >
+                  <Text style={styles.modalOptionText}>Prakriti History</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalOption}
+                  onPress={() => loadHistory("dosha")}
+                >
+                  <Text style={styles.modalOptionText}>Dosha History</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setHistoryModalVisible(false)}>
+                  <Text style={styles.modalBackText}>Close</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.modalTitle}>
+                  {historyType === "prakriti"
+                    ? "Prakriti History"
+                    : "Dosha History"}
+                </Text>
+                {historyLoading ? (
+                  <ActivityIndicator size="small" color="#111827" />
+                ) : historyType === "prakriti" ? (
+                  prakritiHistory.length === 0 ? (
+                    <Text style={styles.historyEmpty}>
+                      No prakriti history yet.
+                    </Text>
+                  ) : (
+                    <ScrollView style={{ maxHeight: 420 }}>
+                      {prakritiHistory.map((item) => (
+                        <View key={item.id} style={styles.historyItem}>
+                          <Text style={styles.historyTitle}>
+                            Result: {item.prakritiType}
+                          </Text>
+                          <Text style={styles.historyMeta}>
+                            {new Date(item.createdAt).toLocaleString()}
+                          </Text>
+                          <Text style={styles.historyDetail}>
+                            Inputs: {Object.keys(item.inputData || {}).length}
+                          </Text>
+                        </View>
+                      ))}
+                    </ScrollView>
+                  )
+                ) : doshaHistory.length === 0 ? (
+                  <Text style={styles.historyEmpty}>No dosha history yet.</Text>
+                ) : (
+                  <ScrollView style={{ maxHeight: 420 }}>
+                    {doshaHistory.map((item) => (
+                      <View key={item.id} style={styles.historyItem}>
+                        <Text style={styles.historyTitle}>
+                          Type: {item.imbalanceType}
+                        </Text>
+                        <Text style={styles.historyMeta}>
+                          {new Date(item.createdAt).toLocaleString()}
+                        </Text>
+                        <Text style={styles.historyDetail}>
+                          Imbalances: {(item.imbalances || []).join(", ")}
+                        </Text>
+                      </View>
+                    ))}
+                  </ScrollView>
+                )}
+
+                <TouchableOpacity
+                  onPress={() => setHistoryType(null)}
+                  style={{ marginTop: 16 }}
+                >
+                  <Text style={styles.modalBackText}>Back</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
