@@ -3,10 +3,27 @@
  * Handles all REST API calls to the backend
  */
 
-import { User, AuthResponse, HealthProfile, PrakritiAssessment, DailyNutrientLog, UserFoodDiary, Recommendation, WellnessProgress, MealPlan, HealthTrackingLog, DoshaProfile } from '@/app/types/schema';
+import {
+    AuthResponse,
+    Booking,
+    DailyNutrientLog,
+    DoctorDetailsResponse,
+    DoctorListResponse,
+    DoshaProfile,
+    HealthProfile,
+    HealthTrackingLog,
+    MealPlan,
+    PrakritiAssessment,
+    Recommendation,
+    SlotsResponse,
+    User,
+    UserFoodDiary,
+    WellnessProgress
+} from "@/app/types/index";
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || 'https://prakriti-backend-1.onrender.com/api';
+  process.env.EXPO_PUBLIC_API_URL ||
+  "https://prakriti-backend-1.onrender.com/api";
 
 class APIClient {
   private baseURL: string;
@@ -25,17 +42,17 @@ class APIClient {
   }
 
   private async makeRequest(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
+    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
     endpoint: string,
     data?: Record<string, unknown>,
   ) {
     const url = `${this.baseURL}${endpoint}`;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+      headers["Authorization"] = `Bearer ${this.token}`;
     }
 
     const config: RequestInit = {
@@ -52,7 +69,7 @@ class APIClient {
 
       if (!response.ok) {
         let errorMessage = `API Error: ${response.statusText}`;
-        
+
         try {
           const errorData = await response.json();
           if (errorData.message) {
@@ -64,13 +81,13 @@ class APIClient {
           // If we can't parse error response, use status text
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
-        
+
         throw new Error(errorMessage);
       }
 
       return await response.json();
     } catch (error) {
-      console.error('API Request Error:', error);
+      console.error("API Request Error:", error);
       throw error;
     }
   }
@@ -80,35 +97,35 @@ class APIClient {
   // ──────────────────────────────────────────────
 
   async signup(email: string, username: string, password: string) {
-    const response = await this.makeRequest('POST', '/auth/signup', {
+    const response = await this.makeRequest("POST", "/auth/signup", {
       email,
       username,
       password,
     });
-    
+
     // Backend wraps response in data property, extract it
     const authData = response.data || response;
-    
+
     return authData as AuthResponse;
   }
 
   async login(email: string, password: string) {
-    const response = await this.makeRequest('POST', '/auth/login', {
+    const response = await this.makeRequest("POST", "/auth/login", {
       email,
       password,
     });
-    
+
     // Log response for debugging
-    console.log('Login response:', response);
-    
+    console.log("Login response:", response);
+
     // Backend wraps response in data property, extract it
     const authData = response.data || response;
-    
+
     return authData as AuthResponse;
   }
 
   async getCurrentUser() {
-    const response = await this.makeRequest('GET', '/auth/me');
+    const response = await this.makeRequest("GET", "/auth/me");
     return response as User;
   }
 
@@ -117,17 +134,28 @@ class APIClient {
   // ──────────────────────────────────────────────
 
   async getHealthProfile(userId: string) {
-    const response = await this.makeRequest('GET', `/users/${userId}/health-profile`);
+    const response = await this.makeRequest(
+      "GET",
+      `/users/${userId}/health-profile`,
+    );
     return response as HealthProfile;
   }
 
   async createHealthProfile(userId: string, data: Partial<HealthProfile>) {
-    const response = await this.makeRequest('POST', `/users/${userId}/health-profile`, data);
+    const response = await this.makeRequest(
+      "POST",
+      `/users/${userId}/health-profile`,
+      data,
+    );
     return response as HealthProfile;
   }
 
   async updateHealthProfile(userId: string, data: Partial<HealthProfile>) {
-    const response = await this.makeRequest('PUT', `/users/${userId}/health-profile`, data);
+    const response = await this.makeRequest(
+      "PUT",
+      `/users/${userId}/health-profile`,
+      data,
+    );
     return response as HealthProfile;
   }
 
@@ -136,15 +164,23 @@ class APIClient {
   // ──────────────────────────────────────────────
 
   async createPrakritiAssessment(userId: string, assessmentType: string) {
-    const response = await this.makeRequest('POST', `/users/${userId}/prakriti-assessments`, {
-      assessmentType,
-    });
+    const response = await this.makeRequest(
+      "POST",
+      `/users/${userId}/prakriti-assessments`,
+      {
+        assessmentType,
+      },
+    );
     return response as PrakritiAssessment;
   }
 
-  async submitPrakritiResponse(assessmentId: string, questionId: string, optionId: string) {
+  async submitPrakritiResponse(
+    assessmentId: string,
+    questionId: string,
+    optionId: string,
+  ) {
     const response = await this.makeRequest(
-      'POST',
+      "POST",
       `/prakriti-assessments/${assessmentId}/responses`,
       { questionId, optionId },
     );
@@ -153,44 +189,66 @@ class APIClient {
 
   async completePrakritiAssessment(assessmentId: string) {
     const response = await this.makeRequest(
-      'PUT',
+      "PUT",
       `/prakriti-assessments/${assessmentId}/complete`,
     );
     return response as PrakritiAssessment;
   }
 
   async getPrakritiAssessments(userId: string) {
-    const response = await this.makeRequest('GET', `/users/${userId}/prakriti-assessments`);
+    const response = await this.makeRequest(
+      "GET",
+      `/users/${userId}/prakriti-assessments`,
+    );
     return response as PrakritiAssessment[];
   }
 
   async getDoshaProfile(userId: string) {
-    const response = await this.makeRequest('GET', `/users/${userId}/dosha-profile`);
+    const response = await this.makeRequest(
+      "GET",
+      `/users/${userId}/dosha-profile`,
+    );
     return response as DoshaProfile;
   }
 
   async submitPrakritiTraits(traits: Record<string, string>) {
-    const response = await this.makeRequest('POST', '/profile/prakriti-traits', traits);
+    const response = await this.makeRequest(
+      "POST",
+      "/profile/prakriti-traits",
+      traits,
+    );
     return response;
   }
 
   async submitDoshaTraits(traits: Record<string, string>) {
-    const response = await this.makeRequest('POST', '/profile/dosha-traits', traits);
+    const response = await this.makeRequest(
+      "POST",
+      "/profile/dosha-traits",
+      traits,
+    );
     return response;
   }
 
   async predictPrakriti(payload: Record<string, string>) {
-    const response = await this.makeRequest('POST', '/profile/predict/prakriti', payload);
+    const response = await this.makeRequest(
+      "POST",
+      "/profile/predict/prakriti",
+      payload,
+    );
     return response;
   }
 
   async predictDosha(payload: Record<string, string>) {
-    const response = await this.makeRequest('POST', '/profile/predict/dosha', payload);
+    const response = await this.makeRequest(
+      "POST",
+      "/profile/predict/dosha",
+      payload,
+    );
     return response;
   }
 
   async getPredictions() {
-    const response = await this.makeRequest('GET', '/profile/predictions');
+    const response = await this.makeRequest("GET", "/profile/predictions");
     return response;
   }
 
@@ -200,15 +258,18 @@ class APIClient {
 
   async searchFoodItems(query: string, category?: string) {
     const params = new URLSearchParams();
-    params.append('query', query);
-    if (category) params.append('category', category);
+    params.append("query", query);
+    if (category) params.append("category", category);
 
-    const response = await this.makeRequest('GET', `/food-items?${params.toString()}`);
+    const response = await this.makeRequest(
+      "GET",
+      `/food-items?${params.toString()}`,
+    );
     return response;
   }
 
   async getFoodItem(foodItemId: string) {
-    const response = await this.makeRequest('GET', `/food-items/${foodItemId}`);
+    const response = await this.makeRequest("GET", `/food-items/${foodItemId}`);
     return response;
   }
 
@@ -218,7 +279,7 @@ class APIClient {
 
   async getUserFoodDiary(userId: string, date: string) {
     const response = await this.makeRequest(
-      'GET',
+      "GET",
       `/users/${userId}/food-diary?date=${date}`,
     );
     return response as UserFoodDiary[];
@@ -226,7 +287,7 @@ class APIClient {
 
   async addFoodDiaryEntry(userId: string, entry: Partial<UserFoodDiary>) {
     const response = await this.makeRequest(
-      'POST',
+      "POST",
       `/users/${userId}/food-diary`,
       entry,
     );
@@ -235,7 +296,7 @@ class APIClient {
 
   async deleteFoodDiaryEntry(userId: string, entryId: string) {
     const response = await this.makeRequest(
-      'DELETE',
+      "DELETE",
       `/users/${userId}/food-diary/${entryId}`,
     );
     return response;
@@ -247,7 +308,7 @@ class APIClient {
 
   async getDailyNutrientLog(userId: string, date: string) {
     const response = await this.makeRequest(
-      'GET',
+      "GET",
       `/users/${userId}/daily-nutrient-logs?date=${date}`,
     );
     return response as DailyNutrientLog;
@@ -255,7 +316,7 @@ class APIClient {
 
   async getWeeklyNutrientLogs(userId: string, startDate: string) {
     const response = await this.makeRequest(
-      'GET',
+      "GET",
       `/users/${userId}/daily-nutrient-logs?startDate=${startDate}&days=7`,
     );
     return response as DailyNutrientLog[];
@@ -267,7 +328,7 @@ class APIClient {
 
   async logHealthMetrics(userId: string, data: Partial<HealthTrackingLog>) {
     const response = await this.makeRequest(
-      'POST',
+      "POST",
       `/users/${userId}/health-tracking`,
       data,
     );
@@ -276,7 +337,7 @@ class APIClient {
 
   async getHealthTrackingHistory(userId: string, days: number = 7) {
     const response = await this.makeRequest(
-      'GET',
+      "GET",
       `/users/${userId}/health-tracking?days=${days}`,
     );
     return response as HealthTrackingLog[];
@@ -284,7 +345,7 @@ class APIClient {
 
   async logWaterIntake(userId: string, amountMl: number) {
     const response = await this.makeRequest(
-      'POST',
+      "POST",
       `/users/${userId}/water-intake`,
       { amountMl },
     );
@@ -293,7 +354,7 @@ class APIClient {
 
   async logSleep(userId: string, data: Record<string, unknown>) {
     const response = await this.makeRequest(
-      'POST',
+      "POST",
       `/users/${userId}/sleep-logs`,
       data,
     );
@@ -302,7 +363,7 @@ class APIClient {
 
   async logExercise(userId: string, data: Record<string, unknown>) {
     const response = await this.makeRequest(
-      'POST',
+      "POST",
       `/users/${userId}/exercise-logs`,
       data,
     );
@@ -311,7 +372,7 @@ class APIClient {
 
   async logMood(userId: string, data: Record<string, unknown>) {
     const response = await this.makeRequest(
-      'POST',
+      "POST",
       `/users/${userId}/mood-logs`,
       data,
     );
@@ -324,7 +385,7 @@ class APIClient {
 
   async createMealPlan(userId: string, data: Partial<MealPlan>) {
     const response = await this.makeRequest(
-      'POST',
+      "POST",
       `/users/${userId}/meal-plans`,
       data,
     );
@@ -332,12 +393,15 @@ class APIClient {
   }
 
   async getMealPlans(userId: string) {
-    const response = await this.makeRequest('GET', `/users/${userId}/meal-plans`);
+    const response = await this.makeRequest(
+      "GET",
+      `/users/${userId}/meal-plans`,
+    );
     return response as MealPlan[];
   }
 
   async getMealPlan(mealPlanId: string) {
-    const response = await this.makeRequest('GET', `/meal-plans/${mealPlanId}`);
+    const response = await this.makeRequest("GET", `/meal-plans/${mealPlanId}`);
     return response as MealPlan;
   }
 
@@ -346,13 +410,16 @@ class APIClient {
   // ──────────────────────────────────────────────
 
   async getRecommendations(userId: string) {
-    const response = await this.makeRequest('GET', `/users/${userId}/recommendations`);
+    const response = await this.makeRequest(
+      "GET",
+      `/users/${userId}/recommendations`,
+    );
     return response as Recommendation[];
   }
 
   async markRecommendationAsRead(userId: string, recommendationId: string) {
     const response = await this.makeRequest(
-      'PATCH',
+      "PATCH",
       `/users/${userId}/recommendations/${recommendationId}`,
       { isRead: true },
     );
@@ -363,9 +430,9 @@ class APIClient {
   // WELLNESS PROGRESS ENDPOINTS
   // ──────────────────────────────────────────────
 
-  async getWellnessProgress(userId: string, periodType: string = 'WEEKLY') {
+  async getWellnessProgress(userId: string, periodType: string = "WEEKLY") {
     const response = await this.makeRequest(
-      'GET',
+      "GET",
       `/users/${userId}/wellness-progress?periodType=${periodType}`,
     );
     return response as WellnessProgress;
@@ -373,7 +440,7 @@ class APIClient {
 
   async getDailyWellnessScore(userId: string) {
     const response = await this.makeRequest(
-      'GET',
+      "GET",
       `/users/${userId}/wellness-progress/daily`,
     );
     return response;
@@ -385,7 +452,7 @@ class APIClient {
 
   async logDinacharya(userId: string, data: Record<string, unknown>) {
     const response = await this.makeRequest(
-      'POST',
+      "POST",
       `/users/${userId}/dinacharya-logs`,
       data,
     );
@@ -394,7 +461,7 @@ class APIClient {
 
   async getDinacharyaLog(userId: string, date: string) {
     const response = await this.makeRequest(
-      'GET',
+      "GET",
       `/users/${userId}/dinacharya-logs?date=${date}`,
     );
     return response;
@@ -406,25 +473,163 @@ class APIClient {
 
   async recognizeFood(userId: string, imageUri: string) {
     const formData = new FormData();
-    formData.append('image', {
+    formData.append("image", {
       uri: imageUri,
-      type: 'image/jpeg',
-      name: 'food.jpg',
+      type: "image/jpeg",
+      name: "food.jpg",
     } as any);
 
-    const response = await fetch(`${this.baseURL}/users/${userId}/food-recognition`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.token}`,
+    const response = await fetch(
+      `${this.baseURL}/users/${userId}/food-recognition`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+        },
+        body: formData,
       },
-      body: formData,
-    });
+    );
 
     if (!response.ok) {
-      throw new Error('Food recognition failed');
+      throw new Error("Food recognition failed");
     }
 
     return response.json();
+  }
+
+  // ──────────────────────────────────────────────
+  // DOCTOR ENDPOINTS
+  // ──────────────────────────────────────────────
+
+  /**
+   * API 1 - List All Doctors (PUBLIC, no auth)
+   */
+  async listDoctors(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<DoctorListResponse> {
+    const response = await this.makeRequest(
+      "GET",
+      `/doctors?page=${page}&limit=${limit}`,
+    );
+    // Backend wraps response in data property
+    return response.data || response;
+  }
+
+  /**
+   * API 2 - Search Doctors (PUBLIC)
+   */
+  async searchDoctors(
+    searchQuery: string,
+    sortBy?: string,
+    order?: "asc" | "desc",
+  ): Promise<DoctorListResponse> {
+    let url = `/doctors?search=${encodeURIComponent(searchQuery)}`;
+    if (sortBy) url += `&sortBy=${sortBy}`;
+    if (order) url += `&order=${order}`;
+    const response = await this.makeRequest("GET", url);
+    // Backend wraps response in data property
+    return response.data || response;
+  }
+
+  /**
+   * API 3 - Filter Doctors by Specialty & Fee (PUBLIC)
+   */
+  async filterDoctors(
+    specialty?: string,
+    minFee?: number,
+    maxFee?: number,
+    sortBy?: string,
+    order?: "asc" | "desc",
+  ): Promise<DoctorListResponse> {
+    let url = "/doctors";
+    const params: string[] = [];
+
+    if (specialty) params.push(`specialty=${encodeURIComponent(specialty)}`);
+    if (minFee !== undefined) params.push(`minFee=${minFee}`);
+    if (maxFee !== undefined) params.push(`maxFee=${maxFee}`);
+    if (sortBy) params.push(`sortBy=${sortBy}`);
+    if (order) params.push(`order=${order}`);
+
+    if (params.length > 0) {
+      url += "?" + params.join("&");
+    }
+
+    const response = await this.makeRequest("GET", url);
+    // Backend wraps response in data property
+    return response.data || response;
+  }
+
+  /**
+   * API 4 - Get Doctor Details + Today's Slots (PUBLIC)
+   */
+  async getDoctorDetails(
+    doctorId: string,
+    date?: string,
+  ): Promise<DoctorDetailsResponse> {
+    let url = `/doctors/${doctorId}`;
+    if (date) url += `?date=${date}`;
+    const response = await this.makeRequest("GET", url);
+    // Backend wraps response in data property
+    return response.data || response;
+  }
+
+  /**
+   * API 5 - Get Doctor Slots for a Date (PUBLIC)
+   */
+  async getDoctorSlots(
+    doctorId: string,
+    date?: string,
+  ): Promise<SlotsResponse> {
+    let url = `/doctors/${doctorId}/slots`;
+    if (date) url += `?date=${date}`;
+    const response = await this.makeRequest("GET", url);
+    // Backend wraps response in data property
+    return response.data || response;
+  }
+
+  /**
+   * API 6 - Book a Slot (AUTHENTICATED)
+   */
+  async bookSlot(
+    doctorId: string,
+    slotId: string,
+    notes?: string,
+  ): Promise<Booking> {
+    const response = await this.makeRequest(
+      "POST",
+      `/doctors/${doctorId}/book`,
+      {
+        slotId,
+        notes,
+      },
+    );
+    // Backend wraps response in data property
+    return response.data || response;
+  }
+
+  /**
+   * API 7 - My Bookings (AUTHENTICATED)
+   */
+  async getMyBookings(status?: string): Promise<Booking[]> {
+    let url = "/doctors/bookings/my";
+    if (status) url += `?status=${status}`;
+    const response = await this.makeRequest("GET", url);
+    // Backend wraps response in data property
+    const data = response.data || response;
+    return Array.isArray(data) ? data : data.bookings || [];
+  }
+
+  /**
+   * API 8 - Cancel Booking (AUTHENTICATED)
+   */
+  async cancelBooking(bookingId: string): Promise<Booking> {
+    const response = await this.makeRequest(
+      "PATCH",
+      `/doctors/bookings/${bookingId}/cancel`,
+    );
+    // Backend wraps response in data property
+    return response.data || response;
   }
 }
 
