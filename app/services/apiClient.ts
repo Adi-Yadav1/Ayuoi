@@ -4,26 +4,26 @@
  */
 
 import {
-    AuthResponse,
-    Booking,
-    DailyNutrientLog,
-    DoctorDetailsResponse,
-    DoctorListResponse,
-    DoshaProfile,
-    HealthProfile,
-    HealthTrackingLog,
-    MealPlan,
-    PrakritiAssessment,
-    Recommendation,
-    SlotsResponse,
-    User,
-    UserFoodDiary,
-    WellnessProgress
+  AuthResponse,
+  Booking,
+  DailyNutrientLog,
+  DoctorDetailsResponse,
+  DoctorListResponse,
+  DoshaProfile,
+  HealthProfile,
+  HealthTrackingLog,
+  MealPlan,
+  PrakritiAssessment,
+  Recommendation,
+  SlotsResponse,
+  User,
+  UserFoodDiary,
+  WellnessProgress,
 } from "@/app/types/index";
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
-  "https://prakriti-backend-1.onrender.com/api";
+  "https://prakriti-api.onrender.com/api";
 
 class APIClient {
   private baseURL: string;

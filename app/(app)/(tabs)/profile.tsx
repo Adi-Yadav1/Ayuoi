@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
-import { getPrakritiResultAsync } from '@/app/services/prakritiService';
-import { getHealthProfile } from '@/app/services/analyticsService';
-import { Card, Section, Button, Loader } from '@/components/ui/Button';
-import { PrakritiResult, HealthProfile } from '@/app/types';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from "@/app/context/AuthContext";
+import { getHealthProfile } from "@/app/services/analyticsService";
+import { getPrakritiResultAsync } from "@/app/services/prakritiService";
+import { HealthProfile, PrakritiResult } from "@/app/types";
+import { Button, Card, Loader, Section } from "@/components/ui/Button";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FEFAF5',
+    backgroundColor: "#FEFAF5",
   },
   scrollView: {
     flex: 1,
@@ -20,9 +27,9 @@ const styles = StyleSheet.create({
     paddingVertical: 32,
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 32,
   },
   headerText: {
@@ -30,29 +37,29 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontWeight: "bold",
+    color: "#111827",
   },
   subtitle: {
-    color: '#6B7280',
+    color: "#6B7280",
     marginTop: 4,
   },
   avatarContainer: {
     width: 48,
     height: 48,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: "#FEF3C7",
     borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatarText: {
     fontSize: 24,
   },
   doshaContainer: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: "#F3F4F6",
     marginBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   doshaEmoji: {
     fontSize: 40,
@@ -63,58 +70,58 @@ const styles = StyleSheet.create({
   },
   doshaName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#111827',
-    textTransform: 'capitalize',
+    fontWeight: "bold",
+    color: "#111827",
+    textTransform: "capitalize",
   },
   doshaSecondary: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: "#9CA3AF",
     marginTop: 4,
   },
   doshaDate: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: "#9CA3AF",
     marginTop: 8,
   },
   scoreRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   scoreLabel: {
-    color: '#374151',
+    color: "#374151",
   },
   scoreValueVata: {
-    fontWeight: 'bold',
-    color: '#A0AEC0',
+    fontWeight: "bold",
+    color: "#A0AEC0",
   },
   scoreValuePitta: {
-    fontWeight: 'bold',
-    color: '#FF9F43',
+    fontWeight: "bold",
+    color: "#FF9F43",
   },
   scoreValueKapha: {
-    fontWeight: 'bold',
-    color: '#48BB78',
+    fontWeight: "bold",
+    color: "#48BB78",
   },
   healthRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: "#F3F4F6",
   },
   healthLabel: {
-    color: '#6B7280',
+    color: "#6B7280",
   },
   healthValue: {
-    fontWeight: 'bold',
-    color: '#111827',
+    fontWeight: "bold",
+    color: "#111827",
   },
   prefTag: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: "#FEF3C7",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 16,
@@ -122,49 +129,49 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   prefTagText: {
-    color: '#92400E',
+    color: "#92400E",
     fontSize: 12,
-    fontWeight: 'bold',
-    textTransform: 'capitalize',
+    fontWeight: "bold",
+    textTransform: "capitalize",
   },
   allergyContainer: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: "#FEF2F2",
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: "#FECACA",
     marginBottom: 16,
   },
   allergyTitle: {
-    fontWeight: 'bold',
-    color: '#991B1B',
+    fontWeight: "bold",
+    color: "#991B1B",
     marginBottom: 8,
   },
   allergyText: {
-    color: '#7F1D1D',
+    color: "#7F1D1D",
     fontSize: 14,
   },
   settingButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     marginBottom: 12,
   },
   settingButtonText: {
-    fontWeight: 'bold',
-    color: '#111827',
+    fontWeight: "bold",
+    color: "#111827",
   },
   versionContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingBottom: 24,
   },
   versionText: {
-    color: '#9CA3AF',
+    color: "#9CA3AF",
     fontSize: 12,
   },
   versionCopyright: {
-    color: '#D1D5DB',
+    color: "#D1D5DB",
     fontSize: 12,
     marginTop: 8,
   },
@@ -177,19 +184,22 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadProfileData();
-  }, []);
+    if (user) {
+      loadProfileData();
+    }
+  }, [user]);
 
   const loadProfileData = async () => {
     try {
+      const userId = user?.id || "user_1";
       const [prakritiData, healthData] = await Promise.all([
-        getPrakritiResultAsync('user_1'),
-        getHealthProfile('user_1')
+        getPrakritiResultAsync(userId),
+        getHealthProfile(userId),
       ]);
       setPrakriti(prakritiData);
       setHealth(healthData);
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error("Error loading profile:", error);
     } finally {
       setLoading(false);
     }
@@ -205,7 +215,10 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.contentContainer}>
           {/* Header */}
           <View style={styles.headerContainer}>
@@ -224,22 +237,30 @@ export default function ProfileScreen() {
               <View>
                 <View style={styles.healthRow}>
                   <Text style={styles.healthLabel}>Name</Text>
-                  <Text style={styles.healthValue}>{user?.username || 'User'}</Text>
+                  <Text style={styles.healthValue}>
+                    {user?.username || "User"}
+                  </Text>
                 </View>
                 <View style={styles.healthRow}>
                   <Text style={styles.healthLabel}>Email</Text>
-                  <Text style={[styles.healthValue, { fontSize: 12 }]}>{user?.email || 'Not available'}</Text>
+                  <Text style={[styles.healthValue, { fontSize: 12 }]}>
+                    {user?.email || "Not available"}
+                  </Text>
                 </View>
-                <View style={[styles.healthRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
+                <View
+                  style={[
+                    styles.healthRow,
+                    { borderBottomWidth: 0, paddingBottom: 0 },
+                  ]}
+                >
                   <Text style={styles.healthLabel}>Member Since</Text>
                   <Text style={styles.healthValue}>
-                    {user?.createdAt 
-                      ? new Date(user.createdAt).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          year: 'numeric' 
+                    {user?.createdAt
+                      ? new Date(user.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          year: "numeric",
                         })
-                      : 'Jan 2024'
-                    }
+                      : "Jan 2024"}
                   </Text>
                 </View>
               </View>
@@ -252,35 +273,52 @@ export default function ProfileScreen() {
               <Card style={styles.doshaContainer}>
                 <View style={{ marginRight: 16 }}>
                   <Text style={styles.doshaEmoji}>
-                    {prakriti.primaryDosha === 'vata' && '💨'}
-                    {prakriti.primaryDosha === 'pitta' && '🔥'}
-                    {prakriti.primaryDosha === 'kapha' && '💧'}
+                    {prakriti.primaryDosha === "vata" && "💨"}
+                    {prakriti.primaryDosha === "pitta" && "🔥"}
+                    {prakriti.primaryDosha === "kapha" && "💧"}
                   </Text>
                 </View>
                 <View style={styles.doshaInfo}>
                   <Text style={styles.doshaName}>{prakriti.primaryDosha}</Text>
-                  <Text style={styles.doshaSecondary}>Secondary: {prakriti.secondaryDosha}</Text>
+                  <Text style={styles.doshaSecondary}>
+                    Secondary: {prakriti.secondaryDosha}
+                  </Text>
                   <Text style={styles.doshaDate}>
-                    Determined {new Date(prakriti.createdAt).toLocaleDateString()}
+                    Determined{" "}
+                    {new Date(prakriti.createdAt).toLocaleDateString()}
                   </Text>
                 </View>
               </Card>
 
               <Card>
                 <View>
-                  <Text style={{ fontWeight: '600', color: '#111827', marginBottom: 12 }}>Dosha Scores</Text>
+                  <Text
+                    style={{
+                      fontWeight: "600",
+                      color: "#111827",
+                      marginBottom: 12,
+                    }}
+                  >
+                    Dosha Scores
+                  </Text>
                   <View>
                     <View style={styles.scoreRow}>
                       <Text style={styles.scoreLabel}>Vata</Text>
-                      <Text style={styles.scoreValueVata}>{prakriti.scores.vata}%</Text>
+                      <Text style={styles.scoreValueVata}>
+                        {prakriti.scores.vata}%
+                      </Text>
                     </View>
                     <View style={styles.scoreRow}>
                       <Text style={styles.scoreLabel}>Pitta</Text>
-                      <Text style={styles.scoreValuePitta}>{prakriti.scores.pitta}%</Text>
+                      <Text style={styles.scoreValuePitta}>
+                        {prakriti.scores.pitta}%
+                      </Text>
                     </View>
                     <View style={[styles.scoreRow, { marginBottom: 0 }]}>
                       <Text style={styles.scoreLabel}>Kapha</Text>
-                      <Text style={styles.scoreValueKapha}>{prakriti.scores.kapha}%</Text>
+                      <Text style={styles.scoreValueKapha}>
+                        {prakriti.scores.kapha}%
+                      </Text>
                     </View>
                   </View>
                 </View>
@@ -290,7 +328,7 @@ export default function ProfileScreen() {
                 title="View Detailed Prakriti Report"
                 variant="outline"
                 style={{ marginTop: 16 }}
-                onPress={() => alert('Detailed report view coming soon!')}
+                onPress={() => router.push("/(app)/prakriti-details")}
               />
             </Section>
           )}
@@ -299,17 +337,23 @@ export default function ProfileScreen() {
           <Section title="Analytics Overview">
             <Card style={{ marginBottom: 16 }}>
               <View>
-                <Text style={{ fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                <Text
+                  style={{
+                    fontWeight: "600",
+                    color: "#111827",
+                    marginBottom: 8,
+                  }}
+                >
                   Your wellness trends at a glance
                 </Text>
-                <Text style={{ color: '#6B7280', fontSize: 14 }}>
+                <Text style={{ color: "#6B7280", fontSize: 14 }}>
                   See nutrition progress, dosha balance, and weekly insights.
                 </Text>
                 <Button
                   title="View Analytics"
                   variant="outline"
                   style={{ marginTop: 12 }}
-                  onPress={() => router.push('/(app)/(tabs)/analytics')}
+                  onPress={() => router.push("/(app)/(tabs)/analytics")}
                 />
               </View>
             </Card>
@@ -334,19 +378,39 @@ export default function ProfileScreen() {
                   </View>
                   <View style={styles.healthRow}>
                     <Text style={styles.healthLabel}>Activity Level</Text>
-                    <Text style={[styles.healthValue, { textTransform: 'capitalize' }]}>
+                    <Text
+                      style={[
+                        styles.healthValue,
+                        { textTransform: "capitalize" },
+                      ]}
+                    >
                       {health.activityLevel}
                     </Text>
                   </View>
                   <View style={styles.healthRow}>
                     <Text style={styles.healthLabel}>Sleep Pattern</Text>
-                    <Text style={[styles.healthValue, { textTransform: 'capitalize' }]}>
+                    <Text
+                      style={[
+                        styles.healthValue,
+                        { textTransform: "capitalize" },
+                      ]}
+                    >
                       {health.sleepPattern}
                     </Text>
                   </View>
-                  <View style={[styles.healthRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
+                  <View
+                    style={[
+                      styles.healthRow,
+                      { borderBottomWidth: 0, paddingBottom: 0 },
+                    ]}
+                  >
                     <Text style={styles.healthLabel}>Stress Level</Text>
-                    <Text style={[styles.healthValue, { textTransform: 'capitalize' }]}>
+                    <Text
+                      style={[
+                        styles.healthValue,
+                        { textTransform: "capitalize" },
+                      ]}
+                    >
                       {health.stressLevel}
                     </Text>
                   </View>
@@ -356,8 +420,16 @@ export default function ProfileScreen() {
               {health.dietaryPreferences.length > 0 && (
                 <Card style={{ marginBottom: 16 }}>
                   <View>
-                    <Text style={{ fontWeight: 'bold', color: '#111827', marginBottom: 8 }}>Dietary Preferences</Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        color: "#111827",
+                        marginBottom: 8,
+                      }}
+                    >
+                      Dietary Preferences
+                    </Text>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
                       {health.dietaryPreferences.map((pref, idx) => (
                         <View key={idx} style={styles.prefTag}>
                           <Text style={styles.prefTagText}>{pref}</Text>
@@ -372,7 +444,9 @@ export default function ProfileScreen() {
                 <Card style={styles.allergyContainer}>
                   <View>
                     <Text style={styles.allergyTitle}>Allergies</Text>
-                    <Text style={styles.allergyText}>{health.allergies.join(', ')}</Text>
+                    <Text style={styles.allergyText}>
+                      {health.allergies.join(", ")}
+                    </Text>
                   </View>
                 </Card>
               )}
@@ -391,7 +465,9 @@ export default function ProfileScreen() {
               <TouchableOpacity style={styles.settingButton}>
                 <Text style={styles.settingButtonText}>Privacy Policy</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.settingButton, { marginBottom: 0 }]}>
+              <TouchableOpacity
+                style={[styles.settingButton, { marginBottom: 0 }]}
+              >
                 <Text style={styles.settingButtonText}>About</Text>
               </TouchableOpacity>
             </View>
@@ -401,16 +477,18 @@ export default function ProfileScreen() {
           <Button
             title="🚪 Log Out"
             variant="outline"
-            style={{ marginTop: 32, marginBottom: 32, borderColor: '#FCA5A5' }}
+            style={{ marginTop: 32, marginBottom: 32, borderColor: "#FCA5A5" }}
             onPress={() => {
-              router.replace('/(auth)/login');
+              router.replace("/(auth)/login");
             }}
           />
 
           {/* App Version */}
           <View style={styles.versionContainer}>
             <Text style={styles.versionText}>Veda v1.0.0</Text>
-            <Text style={styles.versionCopyright}>© 2024 Ayurvedic Wellness</Text>
+            <Text style={styles.versionCopyright}>
+              © 2024 Ayurvedic Wellness
+            </Text>
           </View>
         </View>
       </ScrollView>
