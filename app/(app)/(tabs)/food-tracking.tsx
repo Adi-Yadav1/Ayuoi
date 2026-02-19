@@ -1,14 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, SafeAreaView, Image, StyleSheet } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { recognizeFoodFromImage, getUserFoodHistory } from '@/app/services/foodRecognitionService';
-import { Card, Section, Button, Loader } from '@/components/ui/Button';
-import { FoodEntry, RecognizedFood, DoeshaType } from '@/app/types';
+import { getUserFoodHistory } from "@/app/services/foodRecognitionService";
+import { FoodEntry } from "@/app/types";
+import { Button, Card, Loader, Section } from "@/components/ui/Button";
+import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
+type FoodAnalysis = {
+  foodDetected: string;
+  nutrition: {
+    servingEnergyKcal: number;
+    servingProteinG: number;
+    servingCarbsG: number;
+    servingFatG: number;
+  };
+  doshaAnalysis: {
+    isSuitable: boolean;
+    impact: string;
+    why: string;
+  };
+  healthImpact: {
+    sleepEffect: string;
+    stressEffect: string;
+    activityImpact: string;
+  };
+  viruddhaAlert: {
+    risk: boolean;
+    reason: string;
+  };
+  ayurvedicRecommendation: string;
+  bestTimeToConsume: string;
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FEFAF5',
+    backgroundColor: "#FEFAF5",
   },
   scrollView: {
     flex: 1,
@@ -19,12 +53,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontWeight: "bold",
+    color: "#111827",
     marginBottom: 8,
   },
   subtitle: {
-    color: '#6B7280',
+    color: "#6B7280",
     marginBottom: 32,
     fontSize: 16,
   },
@@ -32,14 +66,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   analyzeLoadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 32,
   },
   analyzeText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     marginBottom: 12,
   },
   spinner: {
@@ -47,11 +81,11 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     borderWidth: 4,
-    borderColor: '#EEE0FF',
-    borderTopColor: '#EE9B4D',
+    borderColor: "#EEE0FF",
+    borderTopColor: "#EE9B4D",
   },
   imagePreview: {
-    width: '100%',
+    width: "100%",
     height: 256,
     borderRadius: 12,
     marginBottom: 16,
@@ -61,14 +95,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   recognizedFoodCard: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: "#F0FDF4",
     borderWidth: 1,
-    borderColor: '#DCFCE7',
+    borderColor: "#DCFCE7",
   },
   foodHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     marginBottom: 16,
   },
   foodInfo: {
@@ -76,129 +110,139 @@ const styles = StyleSheet.create({
   },
   foodName: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontWeight: "bold",
+    color: "#111827",
   },
   foodMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 8,
   },
   foodCategory: {
-    color: '#6B7280',
+    color: "#6B7280",
     fontSize: 14,
   },
   foodConfidence: {
-    color: '#059669',
+    color: "#059669",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 12,
   },
   nutritionContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
   },
   nutritionTitle: {
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     marginBottom: 12,
   },
   nutritionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 8,
   },
   nutritionLabel: {
-    color: '#6B7280',
+    color: "#6B7280",
   },
   nutritionValue: {
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
   },
   doshaImpactContainer: {
     marginBottom: 16,
   },
   doshaImpactTitle: {
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     marginBottom: 8,
   },
   doshaImpactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   doshaImpactLabel: {
-    textTransform: 'capitalize',
-    color: '#374151',
+    textTransform: "capitalize",
+    color: "#374151",
   },
   doshaImpactBadge: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: "#EEF2FF",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 6,
   },
   doshaImpactBadgeText: {
-    color: '#4F46E5',
+    color: "#4F46E5",
     fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'capitalize',
+    fontWeight: "600",
+    textTransform: "capitalize",
+  },
+  analysisText: {
+    color: "#374151",
+    fontSize: 12,
+    marginTop: 6,
+  },
+  analysisSubtext: {
+    color: "#6B7280",
+    fontSize: 12,
+    marginTop: 4,
   },
   foodHistoryTitle: {
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     marginBottom: 12,
   },
   historyItem: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: "#F3F4F6",
   },
   historyItemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 4,
   },
   historyItemName: {
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     flex: 1,
   },
   historyItemCalories: {
-    fontWeight: '600',
-    color: '#EE9B4D',
+    fontWeight: "600",
+    color: "#EE9B4D",
   },
   historyTime: {
-    color: '#9CA3AF',
+    color: "#9CA3AF",
     fontSize: 12,
     marginTop: 4,
   },
   historyCategory: {
     fontSize: 12,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   tipCard: {
     gap: 12,
   },
   tipCardItem: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   tipEmoji: {
     fontSize: 24,
     marginRight: 12,
   },
   tipTitle: {
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     fontSize: 14,
     marginBottom: 2,
   },
   tipDescription: {
-    color: '#6B7280',
+    color: "#6B7280",
     fontSize: 12,
   },
 });
@@ -208,7 +252,9 @@ export default function FoodTrackingScreen() {
   const [loading, setLoading] = useState(true);
   const [recognizing, setRecognizing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [recognizedFood, setRecognizedFood] = useState<RecognizedFood | null>(null);
+  const [recognizedFood, setRecognizedFood] = useState<FoodAnalysis | null>(
+    null,
+  );
 
   useEffect(() => {
     loadHistory();
@@ -216,10 +262,10 @@ export default function FoodTrackingScreen() {
 
   const loadHistory = async () => {
     try {
-      const hist = await getUserFoodHistory('user_1');
+      const hist = await getUserFoodHistory("user_1");
       setHistory(hist);
     } catch (error) {
-      console.error('Error loading food history:', error);
+      console.error("Error loading food history:", error);
     } finally {
       setLoading(false);
     }
@@ -240,7 +286,7 @@ export default function FoodTrackingScreen() {
         await recognizeFood(imageUri);
       }
     } catch (error) {
-      alert('Error picking image');
+      alert("Error picking image");
     }
   };
 
@@ -258,29 +304,67 @@ export default function FoodTrackingScreen() {
         await recognizeFood(imageUri);
       }
     } catch (error) {
-      alert('Error capturing image');
+      alert("Error capturing image");
     }
   };
 
   const recognizeFood = async (imageUri: string) => {
     setRecognizing(true);
     try {
-      const food = await recognizeFoodFromImage(imageUri);
-      setRecognizedFood(food);
+      const formData = new FormData();
+      const fileName = imageUri.split("/").pop() || `food-${Date.now()}.jpg`;
+      const isPng = fileName.toLowerCase().endsWith(".png");
+
+      formData.append("file", {
+        uri: imageUri,
+        name: fileName,
+        type: isPng ? "image/png" : "image/jpeg",
+      } as any);
+
+      const response = await fetch("http://54.226.87.3:8000/analyze", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Analyze failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const analysis: FoodAnalysis = {
+        foodDetected: data.food_detected || "Unknown food",
+        nutrition: {
+          servingEnergyKcal: Number(data?.nutrition?.serving_energy_kcal ?? 0),
+          servingProteinG: Number(data?.nutrition?.serving_protein_g ?? 0),
+          servingCarbsG: Number(data?.nutrition?.serving_carbs_g ?? 0),
+          servingFatG: Number(data?.nutrition?.serving_fat_g ?? 0),
+        },
+        doshaAnalysis: {
+          isSuitable: Boolean(data?.dosha_analysis?.is_suitable),
+          impact: data?.dosha_analysis?.impact || "",
+          why: data?.dosha_analysis?.why || "",
+        },
+        healthImpact: {
+          sleepEffect: data?.health_impact?.sleep_effect || "",
+          stressEffect: data?.health_impact?.stress_effect || "",
+          activityImpact: data?.health_impact?.activity_impact || "",
+        },
+        viruddhaAlert: {
+          risk: Boolean(data?.viruddha_alert?.risk),
+          reason: data?.viruddha_alert?.reason || "",
+        },
+        ayurvedicRecommendation: data?.ayurvedic_recommendation || "",
+        bestTimeToConsume: data?.best_time_to_consume || "",
+      };
+
+      setRecognizedFood(analysis);
     } catch (error) {
-      alert('Error recognizing food');
+      console.error("Analyze error:", error);
+      Alert.alert("Error", "Failed to analyze the image. Please try again.");
     } finally {
       setRecognizing(false);
     }
   };
-
-  const calculateNutrients = (food: RecognizedFood) => ({
-    calories: Math.round(food.calories),
-    protein: food.protein.toFixed(1),
-    carbs: food.carbs.toFixed(1),
-    fat: food.fat.toFixed(1),
-    fiber: food.fiber.toFixed(1)
-  });
 
   if (loading && history.length === 0) {
     return (
@@ -292,7 +376,10 @@ export default function FoodTrackingScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.contentContainer}>
           {/* Header */}
           <Text style={styles.title}>Food Tracking</Text>
@@ -335,13 +422,14 @@ export default function FoodTrackingScreen() {
                 <View>
                   <View style={styles.foodHeader}>
                     <View style={styles.foodInfo}>
-                      <Text style={styles.foodName}>{recognizedFood.name}</Text>
-                      <View style={styles.foodMeta}>
-                        <Text style={styles.foodCategory}>{recognizedFood.category}</Text>
-                        <Text style={styles.foodConfidence}>
-                          {(recognizedFood.confidence * 100).toFixed(0)}% confidence
+                      <Text style={styles.foodName}>
+                        {recognizedFood.foodDetected}
+                      </Text>
+                      {recognizedFood.bestTimeToConsume ? (
+                        <Text style={styles.foodCategory}>
+                          Best time: {recognizedFood.bestTimeToConsume}
                         </Text>
-                      </View>
+                      ) : null}
                     </View>
                   </View>
 
@@ -349,57 +437,111 @@ export default function FoodTrackingScreen() {
                   <View style={styles.nutritionContainer}>
                     <Text style={styles.nutritionTitle}>Nutrition Facts</Text>
                     <View>
-                      {(() => {
-                        const nuts = calculateNutrients(recognizedFood);
-                        return (
-                          <>
-                            <View style={styles.nutritionRow}>
-                              <Text style={styles.nutritionLabel}>Calories</Text>
-                              <Text style={styles.nutritionValue}>{nuts.calories} kcal</Text>
-                            </View>
-                            <View style={styles.nutritionRow}>
-                              <Text style={styles.nutritionLabel}>Protein</Text>
-                              <Text style={styles.nutritionValue}>{nuts.protein}g</Text>
-                            </View>
-                            <View style={styles.nutritionRow}>
-                              <Text style={styles.nutritionLabel}>Carbs</Text>
-                              <Text style={styles.nutritionValue}>{nuts.carbs}g</Text>
-                            </View>
-                            <View style={styles.nutritionRow}>
-                              <Text style={styles.nutritionLabel}>Fat</Text>
-                              <Text style={styles.nutritionValue}>{nuts.fat}g</Text>
-                            </View>
-                            <View style={styles.nutritionRow}>
-                              <Text style={styles.nutritionLabel}>Fiber</Text>
-                              <Text style={styles.nutritionValue}>{nuts.fiber}g</Text>
-                            </View>
-                          </>
-                        );
-                      })()}
+                      <View style={styles.nutritionRow}>
+                        <Text style={styles.nutritionLabel}>Calories</Text>
+                        <Text style={styles.nutritionValue}>
+                          {Math.round(
+                            recognizedFood.nutrition.servingEnergyKcal,
+                          )}{" "}
+                          kcal
+                        </Text>
+                      </View>
+                      <View style={styles.nutritionRow}>
+                        <Text style={styles.nutritionLabel}>Protein</Text>
+                        <Text style={styles.nutritionValue}>
+                          {recognizedFood.nutrition.servingProteinG.toFixed(1)}g
+                        </Text>
+                      </View>
+                      <View style={styles.nutritionRow}>
+                        <Text style={styles.nutritionLabel}>Carbs</Text>
+                        <Text style={styles.nutritionValue}>
+                          {recognizedFood.nutrition.servingCarbsG.toFixed(1)}g
+                        </Text>
+                      </View>
+                      <View style={styles.nutritionRow}>
+                        <Text style={styles.nutritionLabel}>Fat</Text>
+                        <Text style={styles.nutritionValue}>
+                          {recognizedFood.nutrition.servingFatG.toFixed(1)}g
+                        </Text>
+                      </View>
                     </View>
                   </View>
 
-                  {/* Dosha Impact */}
+                  {/* Dosha Analysis */}
                   <View style={styles.doshaImpactContainer}>
-                    <Text style={styles.doshaImpactTitle}>Dosha Impact</Text>
-                    <View>
-                      {(Object.keys(recognizedFood.doshaImpact) as any[]).map((dosha) => (
-                        <View key={dosha} style={styles.doshaImpactRow}>
-                          <Text style={styles.doshaImpactLabel}>{dosha}</Text>
-                          <View style={styles.doshaImpactBadge}>
-                            <Text style={styles.doshaImpactBadgeText}>
-                              {recognizedFood.doshaImpact[dosha as DoeshaType]}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
+                    <Text style={styles.doshaImpactTitle}>Dosha Analysis</Text>
+                    <View style={styles.doshaImpactRow}>
+                      <Text style={styles.doshaImpactLabel}>Suitable</Text>
+                      <View style={styles.doshaImpactBadge}>
+                        <Text style={styles.doshaImpactBadgeText}>
+                          {recognizedFood.doshaAnalysis.isSuitable
+                            ? "Yes"
+                            : "No"}
+                        </Text>
+                      </View>
                     </View>
+                    {recognizedFood.doshaAnalysis.impact ? (
+                      <Text style={styles.analysisText}>
+                        {recognizedFood.doshaAnalysis.impact}
+                      </Text>
+                    ) : null}
+                    {recognizedFood.doshaAnalysis.why ? (
+                      <Text style={styles.analysisSubtext}>
+                        {recognizedFood.doshaAnalysis.why}
+                      </Text>
+                    ) : null}
                   </View>
 
+                  <View style={styles.doshaImpactContainer}>
+                    <Text style={styles.doshaImpactTitle}>Health Impact</Text>
+                    {recognizedFood.healthImpact.sleepEffect ? (
+                      <Text style={styles.analysisText}>
+                        Sleep: {recognizedFood.healthImpact.sleepEffect}
+                      </Text>
+                    ) : null}
+                    {recognizedFood.healthImpact.stressEffect ? (
+                      <Text style={styles.analysisText}>
+                        Stress: {recognizedFood.healthImpact.stressEffect}
+                      </Text>
+                    ) : null}
+                    {recognizedFood.healthImpact.activityImpact ? (
+                      <Text style={styles.analysisText}>
+                        Activity: {recognizedFood.healthImpact.activityImpact}
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  <View style={styles.doshaImpactContainer}>
+                    <Text style={styles.doshaImpactTitle}>Viruddha Alert</Text>
+                    <View style={styles.doshaImpactRow}>
+                      <Text style={styles.doshaImpactLabel}>Risk</Text>
+                      <View style={styles.doshaImpactBadge}>
+                        <Text style={styles.doshaImpactBadgeText}>
+                          {recognizedFood.viruddhaAlert.risk ? "Yes" : "No"}
+                        </Text>
+                      </View>
+                    </View>
+                    {recognizedFood.viruddhaAlert.reason ? (
+                      <Text style={styles.analysisSubtext}>
+                        {recognizedFood.viruddhaAlert.reason}
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  {recognizedFood.ayurvedicRecommendation ? (
+                    <View style={styles.doshaImpactContainer}>
+                      <Text style={styles.doshaImpactTitle}>
+                        Recommendation
+                      </Text>
+                      <Text style={styles.analysisText}>
+                        {recognizedFood.ayurvedicRecommendation}
+                      </Text>
+                    </View>
+                  ) : null}
                   <Button
                     title="✅ Log This Food"
                     onPress={() => {
-                      alert('Food logged successfully!');
+                      alert("Food logged successfully!");
                       setSelectedImage(null);
                       setRecognizedFood(null);
                       loadHistory();
@@ -419,17 +561,26 @@ export default function FoodTrackingScreen() {
                     <View key={entry.id} style={styles.historyItem}>
                       <View style={styles.historyItemRow}>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.historyItemName}>{entry.food.name}</Text>
+                          <Text style={styles.historyItemName}>
+                            {entry.food.name}
+                          </Text>
                           <Text style={styles.historyTime}>
-                            {new Date(entry.timestamp).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {new Date(entry.timestamp).toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
                           </Text>
                         </View>
-                        <Text style={styles.historyItemCalories}>{entry.food.calories} kcal</Text>
+                        <Text style={styles.historyItemCalories}>
+                          {entry.food.calories} kcal
+                        </Text>
                       </View>
-                      <Text style={styles.historyCategory}>{entry.food.category}</Text>
+                      <Text style={styles.historyCategory}>
+                        {entry.food.category}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -458,7 +609,8 @@ export default function FoodTrackingScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.tipTitle}>Best Time to Eat</Text>
                     <Text style={styles.tipDescription}>
-                      Lunch should be your largest meal when digestion is strongest (noon-1 PM)
+                      Lunch should be your largest meal when digestion is
+                      strongest (noon-1 PM)
                     </Text>
                   </View>
                 </View>
