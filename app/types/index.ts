@@ -4,12 +4,12 @@ export interface User {
   name: string;
   email: string;
   dateOfBirth: string;
-  gender: 'male' | 'female' | 'other';
+  gender: "male" | "female" | "other";
   createdAt: string;
 }
 
 // Dosha Types
-export type DoeshaType = 'vata' | 'pitta' | 'kapha';
+export type DoeshaType = "vata" | "pitta" | "kapha";
 
 export interface DoshaScore {
   vata: number;
@@ -36,13 +36,13 @@ export interface HealthProfile {
   age: number;
   weight: number; // kg
   height: number; // cm
-  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'veryActive';
+  activityLevel: "sedentary" | "light" | "moderate" | "active" | "veryActive";
   dietaryPreferences: string[];
   allergies: string[];
   healthConditions: string[];
-  sleepPattern: 'early' | 'moderate' | 'late';
-  digestiveStrength: 'weak' | 'moderate' | 'strong';
-  stressLevel: 'low' | 'moderate' | 'high';
+  sleepPattern: "early" | "moderate" | "late";
+  digestiveStrength: "weak" | "moderate" | "strong";
+  stressLevel: "low" | "moderate" | "high";
   createdAt: string;
   updatedAt: string;
 }
@@ -52,7 +52,7 @@ export interface MealItem {
   id: string;
   name: string;
   description: string;
-  category: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  category: "breakfast" | "lunch" | "dinner" | "snack";
   dosha: DoeshaType[];
   benefits: string[];
   cautions: string[];
@@ -81,10 +81,10 @@ export interface RecognizedFood {
   fiber: number;
   dosha: DoshaScore;
   doshaImpact: {
-    [key in DoeshaType]: 'balancing' | 'aggravating';
+    [key in DoeshaType]: "balancing" | "aggravating";
   };
   servingSize: string;
-  servingUnit: 'g' | 'ml' | 'cup' | 'tbsp';
+  servingUnit: "g" | "ml" | "cup" | "tbsp";
 }
 
 export interface FoodEntry {
@@ -95,7 +95,7 @@ export interface FoodEntry {
   servingSize: number;
   servingUnit: string;
   timestamp: string;
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  mealType: "breakfast" | "lunch" | "dinner" | "snack";
 }
 
 // Dietary Suggestion Types
@@ -104,8 +104,8 @@ export interface DietarySuggestion {
   title: string;
   description: string;
   dosha: DoeshaType;
-  category: 'food' | 'timing' | 'lifestyle' | 'digestion';
-  priority: 'low' | 'medium' | 'high';
+  category: "food" | "timing" | "lifestyle" | "digestion";
+  priority: "low" | "medium" | "high";
   actionableSteps: string[];
   alternatives: string[];
 }
@@ -160,4 +160,79 @@ export interface HealthProfileForm {
   dietaryPreferences: string[];
   allergies: string;
   healthConditions: string;
+}
+
+// ──────────────────────────────────────────────
+// DOCTOR TYPES
+// ──────────────────────────────────────────────
+
+export type BookingStatus = "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
+
+export interface Doctor {
+  id: string;
+  name: string;
+  specialty: string;
+  description?: string;
+  education?: string;
+  qualification?: string;
+  languages: string[];
+  bio?: string;
+  imageUrl?: string;
+  phone?: string;
+  email?: string;
+  gender?: string;
+  location?: string;
+  consultationFee: number;
+  experienceYears: number;
+  rating: number;
+  totalRatings: number;
+  isAvailable: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DoctorSlot {
+  id: string;
+  doctorId: string;
+  slotDate: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  isBooked: boolean;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Booking {
+  id: string;
+  userId: string;
+  doctorId: string;
+  slotId: string;
+  status: BookingStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  doctor?: Doctor;
+  slot?: DoctorSlot;
+}
+
+export interface DoctorListResponse {
+  doctors: Doctor[];
+  specialties: string[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface DoctorDetailsResponse {
+  doctor: Doctor;
+  slots: DoctorSlot[];
+  availableDates: string[];
+}
+
+export interface SlotsResponse {
+  slots: DoctorSlot[];
 }
