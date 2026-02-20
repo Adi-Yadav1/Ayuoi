@@ -211,9 +211,21 @@ export interface Booking {
   status: BookingStatus;
   notes?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   doctor?: Doctor;
   slot?: DoctorSlot;
+  // Payment fields
+  paymentStatus?: "UNPAID" | "PENDING" | "PAID" | "FAILED";
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
+  consultationFee?: number;
+  // Meeting fields
+  meetLink?: string;
+  hasMeetLink?: boolean;
+  canJoinCall?: boolean;
+  patientEmail?: string | null;
+  slotTime?: string;
 }
 
 export interface DoctorListResponse {

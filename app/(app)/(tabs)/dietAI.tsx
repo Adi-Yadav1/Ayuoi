@@ -34,7 +34,7 @@ const MOCK_MESSAGES: ChatMessage[] = [
   {
     id: "m1",
     role: "assistant",
-    text: "Hello. I can help with personalized diet suggestions, meal timing, and routines. Ask me anything.",
+    text: "Hello! I can help with personalized diet suggestions, meal timing, and routines. Ask me anything.\n\nNote: First request may take 30-60 seconds as the service starts up.",
     time: "09:12",
   },
 ];
@@ -46,7 +46,7 @@ const fontFamily = Platform.select({
 });
 
 export default function DietAI() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(MOCK_MESSAGES);
   const [isSending, setIsSending] = useState(false);
@@ -101,7 +101,7 @@ export default function DietAI() {
   };
 
   const sendToApi = async (message: string) => {
-    if (!token) {
+    if (!token || !user?.id) {
       Alert.alert(
         "Login Required",
         "Please log in to use Diet AI recommendations.",
@@ -109,8 +109,8 @@ export default function DietAI() {
       return "Please log in to continue. Once signed in, I can help with diet recommendations.";
     }
 
-    const dosha = "vata";
-    return await apiClient.chatbotChat(dosha, message);
+    const dosha = "vata"; // TODO: Get actual dosha from user profile
+    return await apiClient.chatbotChat(user.id, dosha, message);
   };
 
   const handleSend = async (text?: string) => {
@@ -141,10 +141,20 @@ export default function DietAI() {
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error("Chatbot request failed:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+
+      // Check if it's a service startup message
+      const isServiceStarting =
+        errorMessage.includes("starting up") ||
+        errorMessage.includes("unavailable");
+
       const assistantMessage: ChatMessage = {
         id: `a-${Date.now()}`,
         role: "assistant",
-        text: "Sorry, I couldn't reach the chatbot. Please try again in a moment.",
+        text: isServiceStarting
+          ? `⏳ ${errorMessage}\n\nThe chatbot service is waking up (free tier hosting). Please wait about 30 seconds and try sending your message again.`
+          : `Sorry, I couldn't process your request. Error: ${errorMessage}`,
         time: getTimeStamp(),
       };
       setMessages((prev) => [...prev, assistantMessage]);

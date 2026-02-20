@@ -1,6 +1,9 @@
 import { useAuth } from "@/app/context/AuthContext";
 import { doctorService } from "@/app/services/doctorService";
+import { DEMO_MODE, paymentService } from "@/app/services/paymentService";
 import { Booking, Doctor, DoctorSlot } from "@/app/types/index";
+import DemoPaymentModal from "@/components/DemoPaymentModal";
+import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -346,6 +349,26 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFE4E1",
     borderRadius: 10,
   },
+  joinCallButton: {
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#E6F4EA",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#B7E1C1",
+  },
+  joinCallText: {
+    color: "#1F7A3D",
+    fontWeight: "700",
+    fontSize: 12,
+    textAlign: "center",
+  },
+  callStatusText: {
+    marginTop: 8,
+    color: "#6B5E4B",
+    fontSize: 12,
+  },
   cancelBookingText: {
     color: "#CC4444",
     fontWeight: "600",
@@ -356,6 +379,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 32,
     backgroundColor: "#FFF7EC",
+  },
+  bookingsHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  refreshButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E6CCB5",
+    backgroundColor: "#FFF0DE",
+  },
+  refreshButtonText: {
+    color: "#5F5344",
+    fontWeight: "700",
+    fontSize: 12,
   },
 });
 
@@ -380,6 +423,10 @@ export default function DoctorScreen() {
   const [isFetching, setIsFetching] = useState(false);
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentOrderId, setPaymentOrderId] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState(0);
+  const [paymentDoctorName, setPaymentDoctorName] = useState("");
 
   const feeFilters = ["All", "Under 600", "600-900", "Above 900"];
 
@@ -394,6 +441,10 @@ export default function DoctorScreen() {
       loadUserBookings();
     }
   }, [token, user]);
+
+  const normalizeBooking = (payload: any): Booking => {
+    return payload?.booking || payload;
+  };
 
   const loadInitialDoctors = async () => {
     try {
@@ -520,7 +571,7 @@ export default function DoctorScreen() {
       return;
     }
 
-    if (!token) {
+    if (!token || !user) {
       Alert.alert(
         "Authentication Required",
         "Please log in to book an appointment",
@@ -528,27 +579,160 @@ export default function DoctorScreen() {
       return;
     }
 
+    // Show payment confirmation
+    Alert.alert(
+      "Payment Required",
+      `Consultation Fee: ₹${selectedDoctor.consultationFee || 500}\n\nDoctor: ${selectedDoctor.name}\n\nProceed to payment?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Pay Now",
+          onPress: async () => {
+            try {
+              setIsFetching(true);
+              setShowBookingModal(false);
+
+              console.log("=== PAYMENT FLOW STARTED ===");
+              console.log("Doctor:", selectedDoctor.name);
+              console.log(
+                "Slot:",
+                selectedSlot.startTime,
+                "-",
+                selectedSlot.endTime,
+              );
+              const amount = selectedDoctor.consultationFee || 500;
+              console.log("Amount:", amount);
+
+              if (DEMO_MODE) {
+                const order = await paymentService.createOrder(
+                  selectedDoctor.id,
+                  selectedSlot.id,
+                  amount,
+                  bookingNotes,
+                );
+
+                setPaymentOrderId(order.orderId);
+                setPaymentAmount(order.amount);
+                setPaymentDoctorName(selectedDoctor.name);
+                setShowPaymentModal(true);
+                setIsFetching(false);
+                return;
+              }
+
+              const bookingResponse = await doctorService.bookSlot(
+                selectedDoctor.id,
+                selectedSlot.id,
+                bookingNotes,
+              );
+              const booking = normalizeBooking(bookingResponse);
+
+              Alert.alert(
+                "Booking Confirmed",
+                `Your appointment is confirmed!\n\nMeeting Link: ${booking?.meetLink || "Will be sent via email"}`,
+                [
+                  {
+                    text: "OK",
+                    onPress: () => {
+                      setShowBookingModal(false);
+                      setSelectedSlot(null);
+                      setBookingNotes("");
+                      setSelectedDoctor(null);
+                      loadUserBookings();
+                      loadInitialDoctors();
+                    },
+                  },
+                ],
+              );
+            } catch (error: any) {
+              console.error("Booking failed:", error);
+              Alert.alert(
+                "Booking Error",
+                error.message ||
+                  "Failed to complete booking. Please try again.",
+              );
+            } finally {
+              setIsFetching(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleDemoPaymentSuccess = async (paymentData: {
+    paymentId: string;
+    orderId: string;
+    signature: string;
+  }) => {
+    if (!selectedDoctor || !selectedSlot) {
+      Alert.alert(
+        "Booking Error",
+        "Missing booking details. Please try again.",
+      );
+      return;
+    }
+
+    setShowPaymentModal(false);
+    setIsFetching(true);
+
     try {
-      setIsFetching(true);
-      await doctorService.bookSlot(
+      const bookingResponse = await doctorService.bookSlot(
         selectedDoctor.id,
         selectedSlot.id,
         bookingNotes,
       );
-      Alert.alert("Success", "Appointment booked successfully!");
-      setShowBookingModal(false);
-      setSelectedSlot(null);
-      setBookingNotes("");
-      setSelectedDoctor(null);
-      await loadUserBookings();
-      await loadInitialDoctors();
+      const booking = normalizeBooking(bookingResponse);
+
+      Alert.alert(
+        "Booking Confirmed",
+        `Your appointment is confirmed!\n\nMeeting Link: ${booking?.meetLink || "Will be sent via email"}`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              setShowBookingModal(false);
+              setSelectedSlot(null);
+              setBookingNotes("");
+              setSelectedDoctor(null);
+              loadUserBookings();
+              loadInitialDoctors();
+            },
+          },
+        ],
+      );
     } catch (error: any) {
       console.error("Booking failed:", error);
-      const message =
-        error.message || "Failed to book appointment. Please try again.";
-      Alert.alert("Booking Error", message);
+      Alert.alert(
+        "Booking Error",
+        error.message || "Failed to complete booking. Please try again.",
+      );
     } finally {
       setIsFetching(false);
+    }
+  };
+
+  const handleDemoPaymentCancel = () => {
+    setShowPaymentModal(false);
+    Alert.alert("Payment Cancelled", "Payment was not completed.");
+  };
+
+  const handleJoinCall = async (booking: Booking) => {
+    if (!booking.meetLink) {
+      Alert.alert(
+        "Video Call",
+        "Meet link is not available yet. Please try again shortly.",
+      );
+      return;
+    }
+
+    try {
+      await WebBrowser.openBrowserAsync(booking.meetLink);
+    } catch (error) {
+      console.error("Failed to open meet link:", error);
+      Alert.alert("Video Call", "Failed to open the meeting link.");
     }
   };
 
@@ -690,8 +874,17 @@ export default function DoctorScreen() {
         {/* User Bookings Section */}
         {userBookings.length > 0 && (
           <>
-            <View style={{ marginTop: 24, marginBottom: 16 }}>
+            <View style={styles.bookingsHeaderRow}>
               <Text style={styles.title}>Your Upcoming Appointments</Text>
+              <TouchableOpacity
+                style={styles.refreshButton}
+                onPress={loadUserBookings}
+                disabled={isFetching}
+              >
+                <Text style={styles.refreshButtonText}>
+                  {isFetching ? "Refreshing..." : "Refresh"}
+                </Text>
+              </TouchableOpacity>
             </View>
             {userBookings.map((booking) => (
               <View key={booking.id} style={styles.bookingCard}>
@@ -711,6 +904,21 @@ export default function DoctorScreen() {
                   )}
                 </Text>
                 <Text style={styles.doctorMeta}>Status: {booking.status}</Text>
+                {booking.canJoinCall ||
+                booking.hasMeetLink ||
+                booking.meetLink ? (
+                  <TouchableOpacity
+                    style={styles.joinCallButton}
+                    onPress={() => handleJoinCall(booking)}
+                  >
+                    <Text style={styles.joinCallText}>Join Video Call</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Text style={styles.callStatusText}>
+                    Video call will be available once the doctor starts the
+                    session.
+                  </Text>
+                )}
                 <TouchableOpacity
                   style={styles.cancelBookingButton}
                   onPress={() => handleCancelBooking(booking.id)}
@@ -977,6 +1185,15 @@ export default function DoctorScreen() {
           </View>
         </View>
       </Modal>
+
+      <DemoPaymentModal
+        visible={showPaymentModal}
+        amount={paymentAmount}
+        doctorName={paymentDoctorName}
+        orderId={paymentOrderId}
+        onSuccess={handleDemoPaymentSuccess}
+        onCancel={handleDemoPaymentCancel}
+      />
     </SafeAreaView>
   );
 }

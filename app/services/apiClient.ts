@@ -490,18 +490,36 @@ class APIClient {
   // CHATBOT ENDPOINTS
   // ──────────────────────────────────────────────
 
-  async chatbotChat(dosha: string, message: string): Promise<string> {
-    const response = await this.makeRequest("POST", "/chatbot/chat", {
-      dosha,
-      message,
-    });
+  async chatbotChat(
+    userId: string,
+    dosha: string,
+    message: string,
+  ): Promise<string> {
+    try {
+      const response = await this.makeRequest("POST", "/chatbot/chat", {
+        user_id: userId,
+        dosha,
+        message,
+      });
 
-    const responseText = response?.data?.response || response?.response;
-    if (!responseText) {
-      throw new Error("Unexpected chatbot response");
+      const responseText =
+        response?.data?.response || response?.response || response?.data;
+      if (!responseText) {
+        console.error("Unexpected chatbot response:", response);
+        throw new Error("Unexpected chatbot response");
+      }
+
+      return responseText as string;
+    } catch (error) {
+      // Check if it's a service unavailable error
+      if (error instanceof Error && error.message.includes("unavailable")) {
+        throw new Error(
+          "The chatbot service is currently starting up. This may take 30-60 seconds on first request. Please try again in a moment.",
+        );
+      }
+      // Re-throw other errors
+      throw error;
     }
-
-    return responseText as string;
   }
 
   // ──────────────────────────────────────────────
@@ -667,6 +685,94 @@ class APIClient {
     );
     // Backend wraps response in data property
     return response.data || response;
+  }
+
+  // ──────────────────────────────────────────────
+  // PAYMENT ENDPOINTS (DEMO)
+  // ──────────────────────────────────────────────
+
+  /**
+   * Create Razorpay order for appointment payment
+   * DEMO: This simulates backend creating Razorpay order
+   */
+  async createPaymentOrder(params: {
+    doctorId: string;
+    slotId: string;
+    amount: number;
+    notes?: string;
+  }): Promise<{
+    orderId: string;
+    amount: number;
+    currency: string;
+  }> {
+    // DEMO: In production, backend will create actual Razorpay order
+    // For now, simulate the response
+    console.log("[DEMO] Creating payment order for appointment:", params);
+
+    // Simulate API call delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Generate demo order ID (in production, this comes from Razorpay)
+    const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    return {
+      orderId,
+      amount: params.amount,
+      currency: "INR",
+    };
+
+    // PRODUCTION CODE (uncomment when backend is ready):
+    // const response = await this.makeRequest("POST", "/payments/create-order", params);
+    // return response.data || response;
+  }
+
+  /**
+   * Verify payment and create booking
+   * DEMO: This simulates payment verification + booking creation
+   */
+  async verifyPaymentAndBook(params: {
+    doctorId: string;
+    slotId: string;
+    razorpayPaymentId: string;
+    razorpayOrderId: string;
+    razorpaySignature: string;
+    notes?: string;
+  }): Promise<Booking> {
+    // DEMO: In production, backend will:
+    // 1. Verify Razorpay signature
+    // 2. Create booking in database
+    // 3. Trigger N8N webhook for Google Meet
+    // 4. Send confirmation emails
+    console.log("[DEMO] Verifying payment and creating booking:", params);
+
+    // Simulate API call delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Generate demo booking response
+    const demoBooking: Booking = {
+      id: `booking_${Date.now()}`,
+      userId: "demo-user",
+      doctorId: params.doctorId,
+      slotId: params.slotId,
+      status: "CONFIRMED",
+      notes: params.notes || "",
+      paymentStatus: "PAID",
+      razorpayOrderId: params.razorpayOrderId,
+      razorpayPaymentId: params.razorpayPaymentId,
+      razorpaySignature: params.razorpaySignature,
+      consultationFee: 500,
+      meetLink: `https://meet.google.com/demo-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      slotTime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+    };
+
+    console.log("[DEMO] Booking created successfully:", demoBooking);
+
+    return demoBooking;
+
+    // PRODUCTION CODE (uncomment when backend is ready):
+    // const response = await this.makeRequest("POST", "/payments/verify-and-book", params);
+    // return response.data || response;
   }
 }
 
