@@ -16,7 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import plans from '../(tabs)/plans'
+
 
 const styles = StyleSheet.create({
   container: {

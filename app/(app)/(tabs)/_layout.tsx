@@ -10,6 +10,7 @@ import CartScreen from "./cart";
 import FoodTrackingScreen from "./food-tracking";
 import HomeScreen from "./home";
 import ProfileScreen from "./profile";
+import plans from './plans';
 
 const Tab = createBottomTabNavigator();
 
@@ -112,6 +113,15 @@ export default function TabLayout() {
         component={CartScreen}
         options={{
           title: "Cart",
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: "none" },
+        }}
+      />
+      <Tab.Screen
+        name="plans"
+        component={plans}
+        options={{
+          title: "plans",
           tabBarButton: () => null,
           tabBarItemStyle: { display: "none" },
         }}
