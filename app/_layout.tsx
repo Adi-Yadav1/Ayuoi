@@ -1,7 +1,7 @@
 import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
+    DarkTheme,
+    DefaultTheme,
+    ThemeProvider,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -10,6 +10,7 @@ import "react-native-reanimated";
 
 import { AppProvider } from "@/app/context/AppContext";
 import { AuthProvider } from "@/app/context/AuthContext";
+import { CartProvider } from "@/app/context/CartContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export const unstable_settings = {
@@ -22,29 +23,31 @@ export default function RootLayout() {
   return (
     <AppProvider>
       <AuthProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <View
-            style={{
-              flex: 1,
-              paddingTop:
-                Platform.OS === "android"
-                  ? (RNStatusBar.currentHeight ?? 0)
-                  : 0,
-            }}
+        <CartProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="index" />
-              <Stack.Screen
-                name="(app)"
-                options={{ animationTypeForReplace: "pop" }}
-              />
-            </Stack>
-          </View>
-          <StatusBar style="auto" />
-        </ThemeProvider>
+            <View
+              style={{
+                flex: 1,
+                paddingTop:
+                  Platform.OS === "android"
+                    ? (RNStatusBar.currentHeight ?? 0)
+                    : 0,
+              }}
+            >
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="index" />
+                <Stack.Screen
+                  name="(app)"
+                  options={{ animationTypeForReplace: "pop" }}
+                />
+              </Stack>
+            </View>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </CartProvider>
       </AuthProvider>
     </AppProvider>
   );

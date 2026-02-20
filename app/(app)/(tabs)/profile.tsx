@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import plans from '../(tabs)/plans'
 
 const styles = StyleSheet.create({
   container: {
@@ -461,6 +462,30 @@ export default function ProfileScreen() {
                   variant="outline"
                   style={{ marginTop: 12 }}
                   onPress={() => router.push("/(app)/(tabs)/analytics")}
+                />
+              </View>
+            </Card>
+          </Section>
+          <Section title="Plans">
+            <Card style={{ marginBottom: 16 }}>
+              <View>
+                <Text
+                  style={{
+                    fontWeight: "600",
+                    color: "#111827",
+                    marginBottom: 8,
+                  }}
+                >
+                  Your wellness trends at a glance
+                </Text>
+                <Text style={{ color: "#6B7280", fontSize: 14 }}>
+                  See nutrition progress, dosha balance, and weekly insights.
+                </Text>
+                <Button
+                  title="View Plans"
+                  variant="outline"
+                  style={{ marginTop: 12 }}
+                  onPress={() => router.push("/(app)/(tabs)/plans")}
                 />
               </View>
             </Card>

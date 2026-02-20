@@ -5,9 +5,10 @@ import React from "react";
 import Dietitian from "../(tabs)/dietAI";
 import DoctorScreen from "../(tabs)/doctor";
 import AnalyticsScreen from "./analytics";
+import AyurvedicStoreScreen from "./ayurvedic-store";
+import CartScreen from "./cart";
 import FoodTrackingScreen from "./food-tracking";
 import HomeScreen from "./home";
-import PlansScreen from "./plans";
 import ProfileScreen from "./profile";
 
 const Tab = createBottomTabNavigator();
@@ -42,16 +43,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tab.Screen
-        name="plans"
-        component={PlansScreen}
-        options={{
-          title: "Plans",
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="book-open" size={24} color={color} />
-          ),
-        }}
-      />
+
       <Tab.Screen
         name="Diet"
         component={Dietitian}
@@ -96,6 +88,16 @@ export default function TabLayout() {
         }}
       />
       <Tab.Screen
+        name="store"
+        component={AyurvedicStoreScreen}
+        options={{
+          title: "Store",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="store" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="profile"
         component={ProfileScreen}
         options={{
@@ -103,6 +105,15 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Ionicons name="person" size={24} color={color} />
           ),
+        }}
+      />
+      <Tab.Screen
+        name="cart"
+        component={CartScreen}
+        options={{
+          title: "Cart",
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: "none" },
         }}
       />
     </Tab.Navigator>
