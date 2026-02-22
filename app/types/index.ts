@@ -226,6 +226,22 @@ export interface Booking {
   canJoinCall?: boolean;
   patientEmail?: string | null;
   slotTime?: string;
+  // Prescription fields
+  hasPrescription?: boolean;
+  prescription?: Prescription;
+}
+
+export interface Prescription {
+  id: string;
+  bookingId: string;
+  userId: string;
+  doctorId: string;
+  content: string; // Markdown text
+  transcriptFile?: string;
+  createdAt: string;
+  updatedAt: string;
+  booking?: Booking;
+  doctor?: Doctor;
 }
 
 export interface DoctorListResponse {

@@ -687,6 +687,31 @@ class APIClient {
     return response.data || response;
   }
 
+  /**
+   * API 9 - Get My Prescriptions (AUTHENTICATED)
+   */
+  async getMyPrescriptions(): Promise<any[]> {
+    const response = await this.makeRequest(
+      "GET",
+      "/doctors/bookings/prescriptions",
+    );
+    // Backend wraps response in data property
+    const data = response.data || response;
+    return Array.isArray(data) ? data : data.prescriptions || [];
+  }
+
+  /**
+   * API 10 - Get Booking Detail (AUTHENTICATED)
+   */
+  async getBookingDetail(bookingId: string): Promise<Booking> {
+    const response = await this.makeRequest(
+      "GET",
+      `/doctors/bookings/${bookingId}`,
+    );
+    // Backend wraps response in data property
+    return response.data?.booking || response.data || response;
+  }
+
   // ──────────────────────────────────────────────
   // PAYMENT ENDPOINTS (DEMO)
   // ──────────────────────────────────────────────

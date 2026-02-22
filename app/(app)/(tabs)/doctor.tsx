@@ -3,6 +3,7 @@ import { doctorService } from "@/app/services/doctorService";
 import { DEMO_MODE, paymentService } from "@/app/services/paymentService";
 import { Booking, Doctor, DoctorSlot } from "@/app/types/index";
 import DemoPaymentModal from "@/components/DemoPaymentModal";
+import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -404,6 +405,7 @@ const styles = StyleSheet.create({
 
 export default function DoctorScreen() {
   const { token, user } = useAuth();
+  const router = useRouter();
 
   // State management
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -904,6 +906,21 @@ export default function DoctorScreen() {
                   )}
                 </Text>
                 <Text style={styles.doctorMeta}>Status: {booking.status}</Text>
+
+                {booking.hasPrescription && (
+                  <TouchableOpacity
+                    style={styles.joinCallButton}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(app)/prescription-detail",
+                        params: { prescriptionId: booking.prescription?.id },
+                      })
+                    }
+                  >
+                    <Text style={styles.joinCallText}>View Prescription</Text>
+                  </TouchableOpacity>
+                )}
+
                 {booking.canJoinCall ||
                 booking.hasMeetLink ||
                 booking.meetLink ? (

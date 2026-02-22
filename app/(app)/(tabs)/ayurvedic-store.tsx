@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
   benefitText: {
     fontSize: 13,
     color: "#374151",
-    flex: 1,
+    flex: 1,   
   },
 });
 

@@ -9,8 +9,9 @@ import AyurvedicStoreScreen from "./ayurvedic-store";
 import CartScreen from "./cart";
 import FoodTrackingScreen from "./food-tracking";
 import HomeScreen from "./home";
+import plans from "./plans";
+import PrescriptionsScreen from "./prescriptions";
 import ProfileScreen from "./profile";
-import plans from './plans';
 
 const Tab = createBottomTabNavigator();
 
@@ -73,6 +74,20 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="stethoscope"
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="prescriptions"
+        component={PrescriptionsScreen}
+        options={{
+          title: "Prescriptions",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="file-document"
               size={24}
               color={color}
             />
